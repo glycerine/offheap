@@ -77,6 +77,14 @@ func (t *HashTable) Lookup(key uint64) *Cell {
 // 2nd return value is false if already existed (and thus took no action)
 func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 
+	VPrintf("\n ---- Insert(%v) called with t = \n", key)
+	VDump(t)
+
+	defer func() {
+		VPrintf("\n ---- Insert(%v) done, with t = \n", key)
+		VDump(t)
+	}()
+
 	var cell *Cell
 
 	if key != 0 {
@@ -93,6 +101,7 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 				}
 				if cell.Key == 0 {
 					if (t.Population+1)*4 >= t.ArraySize*3 {
+						VPrintf("detected (t.Population+1)*4 >= t.ArraySize*3, i.e. %v >= %v, calling Repop with double the size\n", (t.Population+1)*4, t.ArraySize*3)
 						t.Repopulate(t.ArraySize * 2)
 						// resized, so start all over
 						break
@@ -228,6 +237,9 @@ func (t *HashTable) DeleteKey(key uint64) {
 
 func (t *HashTable) Repopulate(desiredSize uint64) {
 
+	VPrintf("\n ---- Repopulate called with t = \n")
+	VDump(t)
+
 	if desiredSize&(desiredSize-1) != 0 {
 		panic("desired size must be a power of 2")
 	}
@@ -249,6 +261,7 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 	for i := range oldCells {
 		{
 			c = &oldCells[i]
+			VPrintf("\n in oldCell copy loop, at i = %v, and c = '%#v'\n", i, c)
 			if c.Key != 0 {
 				// Insert this element into new array
 				pos = integerHash(c.Key) % t.ArraySize
@@ -256,10 +269,13 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 				// for ;; cell = ((cell) + 1 != t.Cells + t.ArraySize ? (cell) + 1 : t.Cells))
 				// for (Cell* cell = FIRST_CELL(integerHash(c.Key));; cell = CIRCULAR_NEXT(cell))
 
+				VPrintf("   in Repop, pos = %v for c.Key = %v and t.ArraySize = %v\n", pos, c.Key, t.ArraySize)
+
 				for {
 					cell := &t.Cells[pos]
+					VPrintf("cell = %v, pos = %v, t.Cells = %v\n", cell, pos, t.Cells)
 
-					if cell.Key != 0 {
+					if cell.Key == 0 {
 						// Insert here
 						*cell = *c
 						break
@@ -275,6 +291,9 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 		// Delete old array; happens when oldCells goes out of scope
 		// todo: delete in off-heap space
 	}
+
+	VPrintf("\n ---- Done with Repopulate, now t = \n")
+	VDump(t)
 }
 
 //----------------------------------------------
