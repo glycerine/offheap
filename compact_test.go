@@ -21,3 +21,28 @@ func TestCompact(t *testing.T) {
 	})
 
 }
+
+func TestCompatAfterDelete(t *testing.T) {
+
+	h := offheap.NewHashTable(2)
+
+	h.Clear()
+	cv.Convey("after being filled up and then deleted down to just 2 elements, Compact() should reduce table size to 4", t, func() {
+		N := 100
+
+		// fill up a table
+		cv.So(h.Population, cv.ShouldEqual, 0)
+		for i := 0; i < N; i++ {
+			h.Insert(uint64(i))
+		}
+
+		// now delete from it
+		for i := 0; i < N-2; i++ {
+			h.DeleteKey(uint64(i))
+		}
+		cv.So(len(h.Cells), cv.ShouldEqual, 256)
+		h.Compact()
+		cv.So(len(h.Cells), cv.ShouldEqual, 4)
+
+	})
+}
