@@ -1,5 +1,10 @@
 package offheap
 
+import (
+	"fmt"
+	"unsafe"
+)
+
 // based on the public domain code of https://github.com/preshing/CompareIntegerMaps
 
 //----------------------------------------------
@@ -14,19 +19,19 @@ package offheap
 //----------------------------------------------
 
 type Cell struct {
-	Key   int64
+	Key   uint64
 	Value interface{}
 }
 
 type HashTable struct {
 	cells      []Cell
-	arraySize  int64
-	population int64
+	arraySize  uint64
+	population uint64
 	zeroUsed   bool
 	zeroCell   Cell
 }
 
-func NewHashTable(initialSize int64) *HashTable {
+func NewHashTable(initialSize uint64) *HashTable {
 	return &HashTable{
 		// todo: allocate this off-heap instead
 		cells:     make([]Cell, initialSize),
@@ -39,26 +44,26 @@ func (t *HashTable) DestroyHashTable() {
 }
 
 // Basic operations
-func (t *HashTable) Lookup(key int64) (*Cell, int64) {
+func (t *HashTable) Lookup(key uint64) *Cell {
 
 	var cell *Cell
 
 	if key == 0 {
 		if t.zeroUsed {
-			return &t.zeroCell, -1
+			return &t.zeroCell
 		}
-		return nil, -2
+		return nil
 
 	} else {
 
-		h := integerHash(key) % t.arraySize
+		h := integerHash(uint64(key)) % t.arraySize
 
 		for {
 			cell = &(t.cells[h])
 			if cell.Key == key {
 				return cell
 			}
-			if cell.Key == nil {
+			if cell.Key == 0 {
 				return nil
 			}
 			h++
@@ -70,14 +75,14 @@ func (t *HashTable) Lookup(key int64) (*Cell, int64) {
 }
 
 // 2nd return value is false if already existed (and thus took no action)
-func (t *HashTable) Insert(key int64) (*Cell, bool) {
+func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 
 	var cell *Cell
 
 	if key != 0 {
 
 		for {
-			h := integerHash(key) % t.arraySize
+			h := integerHash(uint64(key)) % t.arraySize
 
 			for {
 				cell = &(t.cells[h])
@@ -94,7 +99,7 @@ func (t *HashTable) Insert(key int64) (*Cell, bool) {
 					}
 					t.population++
 					cell.Key = key
-					return cell
+					return cell, true
 				}
 
 				h++
@@ -115,14 +120,14 @@ func (t *HashTable) Insert(key int64) (*Cell, bool) {
 				t.Repopulate(t.arraySize * 2)
 			}
 		}
-		return &t.zeroCell
+		return &t.zeroCell, true
 	}
 
 }
 
 func (t *HashTable) DeleteCell(cell *Cell) {
 
-	if cell == t.zeroCell {
+	if cell == &t.zeroCell {
 		// Delete zero cell
 		if !t.zeroUsed {
 			panic("deleting zero element when not used")
@@ -134,11 +139,11 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 
 	} else {
 
-		pos := (int64(cell) - int64(&t.cells[0])) / int64(unsafe.Sizeof(Cell))
+		pos := uint64((uintptr(unsafe.Pointer(cell)) - uintptr(unsafe.Pointer(&t.cells[0]))) / uintptr(unsafe.Sizeof(Cell{})))
 
 		// Delete from regular cells
 		if pos < 0 || pos >= t.arraySize {
-			panic("cell out of bounds: pos %v was < 0 or >= t.arraySize == %v", pos, t.arraySize)
+			panic(fmt.Sprintf("cell out of bounds: pos %v was < 0 or >= t.arraySize == %v", pos, t.arraySize))
 		}
 		if t.cells[pos].Key == 0 {
 			panic("zero Key in non-zero Cell!")
@@ -156,7 +161,7 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 		for {
 			neighbor = &t.cells[nei]
 
-			if neighbor.Key == nil {
+			if neighbor.Key == 0 {
 				// There's nobody to swap with. Go ahead and clear this cell, then return
 				t.cells[pos].Key = 0
 				t.cells[pos].Value = nil
@@ -167,17 +172,17 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 			ideal := integerHash(neighbor.Key) % t.arraySize
 
 			if pos >= ideal {
-				circular_offset_ideal_pos = pos - ideal
+				circular_offset_ideal_pos = int64(pos) - int64(ideal)
 			} else {
 				// pos < ideal, so pos - ideal is negative, wrap-around has happened.
-				circular_offset_ideal_pos = t.arraySize - ideal + pos
+				circular_offset_ideal_pos = int64(t.arraySize) - int64(ideal) + int64(pos)
 			}
 
 			if nei >= ideal {
-				circular_offset_ideal_nei = nei - ideal
+				circular_offset_ideal_nei = int64(nei) - int64(ideal)
 			} else {
 				// nei < ideal, so nei - ideal is negative, wrap-around has happened.
-				circular_offset_ideal_nei = t.arraySize - ideal + nei
+				circular_offset_ideal_nei = int64(t.arraySize) - int64(ideal) + int64(nei)
 			}
 
 			if circular_offset_ideal_pos < circular_offset_ideal_nei {
@@ -207,28 +212,21 @@ func (t *HashTable) Clear() {
 
 	// Clear zero cell
 	t.zeroUsed = false
-	t.zeroCell.value = 0
+	t.zeroCell.Value = 0
 }
 
 func (t *HashTable) Compact() {
-	t.Repopulate(upper_power_of_two((m_population*4 + 3) / 3))
+	t.Repopulate(upper_power_of_two((t.population*4 + 3) / 3))
 }
 
-func (t *HashTable) DeleteKey(key int64) {
-	value := Lookup(key)
+func (t *HashTable) DeleteKey(key uint64) {
+	value := t.Lookup(key)
 	if value != nil {
 		t.DeleteCell(value)
 	}
 }
 
-func (t *HashTable) Compact() {
-	value := Lookup(key)
-	if value != nil {
-		t.Delete(value)
-	}
-}
-
-func (t *HashTable) Repopulate(desiredSize int64) {
+func (t *HashTable) Repopulate(desiredSize uint64) {
 
 	if desiredSize&(desiredSize-1) != 0 {
 		panic("desired size must be a power of 2")
@@ -247,7 +245,7 @@ func (t *HashTable) Repopulate(desiredSize int64) {
 	// Iterate through old array
 	// (any zero entry can stay in place; so ignore Key == 0 below).
 	var c *Cell
-	var pos int64
+	var pos uint64
 	for i := range oldCells {
 		{
 			c = &oldCells[i]
@@ -316,7 +314,7 @@ func (it *Iterator) Next() *Cell {
 
 	// Iterate through the regular cells
 	it.Pos++
-	for it.Pos != it.Tab.arraySize {
+	for uint64(it.Pos) != it.Tab.arraySize {
 		it.Cur = &it.Tab.cells[it.Pos]
 		if it.Cur.Key != 0 {
 			return it.Cur

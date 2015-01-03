@@ -1,6 +1,6 @@
 package offheap
 
-func upper_power_of_two(v uint32) uint32 {
+func upper_power_of_two32(v uint32) uint32 {
 	v--
 	v |= v >> 1
 	v |= v >> 2
@@ -24,7 +24,7 @@ func upper_power_of_two(v uint64) uint64 {
 }
 
 // from code.google.com/p/smhasher/wiki/MurmurHash3
-func integerHash32(h uint32_t) uint32 {
+func integerHash32(h uint32) uint32 {
 	h ^= h >> 16
 	h *= 0x85ebca6b
 	h ^= h >> 13
