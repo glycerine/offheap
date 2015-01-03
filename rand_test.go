@@ -57,5 +57,26 @@ func TestRandomOperationsOrder(t *testing.T) {
 
 			}
 		}
+
+		// distribution more emphasizing deletes
+
+		for i := 0; i < N; i++ {
+
+			op := gen.Int() % 2
+			k := uint64(gen.Int() % (N / 5))
+			v := gen.Int() % (N / 2)
+
+			switch op {
+			case 0:
+				h.InsertIntValue(k, v)
+				m[k] = v
+				cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+			case 1:
+				h.DeleteKey(uint64(k))
+				delete(m, k)
+				cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+
+			}
+		}
 	})
 }
