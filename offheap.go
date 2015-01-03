@@ -5,7 +5,11 @@ import (
 	"unsafe"
 )
 
-// based on the public domain code of https://github.com/preshing/CompareIntegerMaps
+// Inspired by the public domain C++ code of
+//    https://github.com/preshing/CompareIntegerMaps
+// See also
+//    http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/
+// for performance studies.
 
 //----------------------------------------------
 //  HashTable
@@ -15,7 +19,8 @@ import (
 //  In the t.cells array, Key = 0 is reserved to indicate an unused cell.
 //  Actual value for key 0 (if any) is stored in t.zeroCell.
 //  The hash table automatically doubles in size when it becomes 75% full.
-//  The hash table never shrinks in size, even after Clear(), unless you explicitly call Compact().
+//  The hash table never shrinks in size, even after Clear(), unless you explicitly
+//  call Compact().
 //----------------------------------------------
 
 type Cell struct {
@@ -311,6 +316,13 @@ func NewIterator(tab *HashTable) *Iterator {
 	it := &Iterator{
 		Tab: tab,
 		Cur: &tab.ZeroCell,
+		Pos: -1, // means we are at the ZeroCell to start with
+	}
+
+	if it.Tab.Population == 0 {
+		it.Cur = nil
+		it.Pos = -2
+		return it
 	}
 
 	if !it.Tab.ZeroUsed {
@@ -325,11 +337,6 @@ func (it *Iterator) Next() *Cell {
 	// Already finished?
 	if it.Cur == nil {
 		return nil
-	}
-
-	// Iterate past zero cell
-	if it.Cur == &it.Tab.ZeroCell {
-		it.Pos = -1
 	}
 
 	// Iterate through the regular Cells
