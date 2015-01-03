@@ -36,7 +36,7 @@ func TestGrowth(t *testing.T) {
 		for i := 0; i < N; i++ {
 			cell := h.Lookup(uint64(i))
 			cv.So(cell, cv.ShouldNotEqual, nil)
-			cv.So(cell.Key, cv.ShouldEqual, i)
+			cv.So(cell.HashedKey, cv.ShouldEqual, i)
 		}
 		cell := h.Lookup(uint64(N + 1))
 		cv.So(cell, cv.ShouldEqual, nil)

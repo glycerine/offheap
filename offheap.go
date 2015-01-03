@@ -5,18 +5,21 @@ import (
 	"unsafe"
 )
 
+// Copyright (C) 2015 by Jason E. Aten, Ph.D.
+//
 // Inspired by the public domain C++ code of
 //    https://github.com/preshing/CompareIntegerMaps
 // See also
 //    http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/
 // for performance studies.
+//
 
 //----------------------------------------------
 //  HashTable
 //
 //  Maps pointer-sized integers to pointer-sized integers.
 //  Uses open addressing with linear probing.
-//  In the t.cells array, Key = 0 is reserved to indicate an unused cell.
+//  In the t.cells array, HashedKey = 0 is reserved to indicate an unused cell.
 //  Actual value for key 0 (if any) is stored in t.zeroCell.
 //  The hash table automatically doubles in size when it becomes 75% full.
 //  The hash table never shrinks in size, even after Clear(), unless you explicitly
@@ -24,8 +27,8 @@ import (
 //----------------------------------------------
 
 type Cell struct {
-	Key   uint64
-	Value interface{}
+	HashedKey uint64
+	Value     interface{}
 }
 
 type HashTable struct {
@@ -65,10 +68,10 @@ func (t *HashTable) Lookup(key uint64) *Cell {
 
 		for {
 			cell = &(t.Cells[h])
-			if cell.Key == key {
+			if cell.HashedKey == key {
 				return cell
 			}
-			if cell.Key == 0 {
+			if cell.HashedKey == 0 {
 				return nil
 			}
 			h++
@@ -100,11 +103,11 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 			for {
 				cell = &(t.Cells[h])
 
-				if cell.Key == key {
+				if cell.HashedKey == key {
 					// already exists
 					return cell, false
 				}
-				if cell.Key == 0 {
+				if cell.HashedKey == 0 {
 					if (t.Population+1)*4 >= t.ArraySize*3 {
 						VPrintf("detected (t.Population+1)*4 >= t.ArraySize*3, i.e. %v >= %v, calling Repop with double the size\n", (t.Population+1)*4, t.ArraySize*3)
 						t.Repopulate(t.ArraySize * 2)
@@ -112,7 +115,7 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 						break
 					}
 					t.Population++
-					cell.Key = key
+					cell.HashedKey = key
 					return cell, true
 				}
 
@@ -160,8 +163,8 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 		if pos < 0 || pos >= t.ArraySize {
 			panic(fmt.Sprintf("cell out of bounds: pos %v was < 0 or >= t.ArraySize == %v", pos, t.ArraySize))
 		}
-		if t.Cells[pos].Key == 0 {
-			panic("zero Key in non-zero Cell!")
+		if t.Cells[pos].HashedKey == 0 {
+			panic("zero HashedKey in non-zero Cell!")
 		}
 
 		// Remove this cell by shuffling neighboring Cells so there are no gaps in anyone's probe chain
@@ -176,15 +179,15 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 		for {
 			neighbor = &t.Cells[nei]
 
-			if neighbor.Key == 0 {
+			if neighbor.HashedKey == 0 {
 				// There's nobody to swap with. Go ahead and clear this cell, then return
-				t.Cells[pos].Key = 0
+				t.Cells[pos].HashedKey = 0
 				t.Cells[pos].Value = nil
 				t.Population--
 				return
 			}
 
-			ideal := integerHash(neighbor.Key) % t.ArraySize
+			ideal := integerHash(neighbor.HashedKey) % t.ArraySize
 
 			if pos >= ideal {
 				circular_offset_ideal_pos = int64(pos) - int64(ideal)
@@ -261,27 +264,23 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 	t.Cells = make([]Cell, t.ArraySize)
 
 	// Iterate through old array
-	// (any zero entry can stay in place; so ignore Key == 0 below).
+	// (any zero entry can stay in place; so ignore HashedKey == 0 below).
 	var c *Cell
 	var pos uint64
 	for i := range oldCells {
 		{
 			c = &oldCells[i]
 			VPrintf("\n in oldCell copy loop, at i = %v, and c = '%#v'\n", i, c)
-			if c.Key != 0 {
+			if c.HashedKey != 0 {
 				// Insert this element into new array
-				pos = integerHash(c.Key) % t.ArraySize
+				pos = integerHash(c.HashedKey) % t.ArraySize
 
-				// for ;; cell = ((cell) + 1 != t.Cells + t.ArraySize ? (cell) + 1 : t.Cells))
-				// for (Cell* cell = FIRST_CELL(integerHash(c.Key));; cell = CIRCULAR_NEXT(cell))
-
-				VPrintf("   in Repop, pos = %v for c.Key = %v and t.ArraySize = %v\n", pos, c.Key, t.ArraySize)
-
+				VPrintf("   in Repop, pos = %v for c.HashedKey = %v and t.ArraySize = %v\n", pos, c.HashedKey, t.ArraySize)
 				for {
 					cell := &t.Cells[pos]
 					VPrintf("cell = %v, pos = %v, t.Cells = %v\n", cell, pos, t.Cells)
 
-					if cell.Key == 0 {
+					if cell.HashedKey == 0 {
 						// Insert here
 						*cell = *c
 						break
@@ -343,7 +342,7 @@ func (it *Iterator) Next() *Cell {
 	it.Pos++
 	for uint64(it.Pos) != it.Tab.ArraySize {
 		it.Cur = &it.Tab.Cells[it.Pos]
-		if it.Cur.Key != 0 {
+		if it.Cur.HashedKey != 0 {
 			return it.Cur
 		}
 		it.Pos++
