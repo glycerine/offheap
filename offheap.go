@@ -52,6 +52,8 @@ func (t *HashTable) DestroyHashTable() {
 }
 
 // Basic operations
+
+// return nil if not found
 func (t *HashTable) Lookup(key uint64) *Cell {
 
 	var cell *Cell
@@ -141,6 +143,12 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 		return &t.ZeroCell, wasNew
 	}
 
+}
+
+func (t *HashTable) InsertIntValue(key uint64, value int) bool {
+	cell, ok := t.Insert(key)
+	cell.Value = value
+	return ok
 }
 
 func (t *HashTable) DeleteCell(cell *Cell) {
