@@ -1,4 +1,4 @@
-package main
+package offheap
 
 func upper_power_of_two(v uint32) uint32 {
 	v--
