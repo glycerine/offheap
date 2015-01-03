@@ -225,7 +225,7 @@ func (t *HashTable) Clear() {
 }
 
 func (t *HashTable) Compact() {
-	t.Repopulate(upper_power_of_two((t.Population*4 + 3) / 3))
+	t.Repopulate(Upper_power_of_two((t.Population*4 + 3) / 3))
 }
 
 func (t *HashTable) DeleteKey(key uint64) {

@@ -23,12 +23,23 @@ func TestGrowth(t *testing.T) {
 
 	h.Clear()
 	cv.Convey("inserting more than the current size should automatically grow the table", t, func() {
+		N := 100
+
 		cv.So(h.Population, cv.ShouldEqual, 0)
-		for i := 0; i < 10; i++ {
+		for i := 0; i < N; i++ {
 			_, ok := h.Insert(uint64(i))
 			cv.So(ok, cv.ShouldEqual, true)
 		}
-		cv.So(h.Population, cv.ShouldEqual, 10)
-		cv.So(h.ArraySize, cv.ShouldEqual, 16)
+		cv.So(h.Population, cv.ShouldEqual, N)
+		cv.So(h.ArraySize, cv.ShouldEqual, offheap.Upper_power_of_two(uint64(float64(N)*4.0/3.0)))
+
+		for i := 0; i < N; i++ {
+			cell := h.Lookup(uint64(i))
+			cv.So(cell, cv.ShouldNotEqual, nil)
+			cv.So(cell.Key, cv.ShouldEqual, i)
+		}
+		cell := h.Lookup(uint64(N + 1))
+		cv.So(cell, cv.ShouldEqual, nil)
+
 	})
 }
