@@ -26,10 +26,6 @@ type HashTable struct {
 	zeroCell   Cell
 }
 
-func (t *HashTable) Repopulate(desiredSize int64) {
-
-}
-
 func NewHashTable(initialSize int64) *HashTable {
 	return &HashTable{
 		// todo: allocate this off-heap instead
