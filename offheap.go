@@ -358,5 +358,6 @@ func (it *Iterator) Next() *Cell {
 
 	// Finished
 	it.Cur = nil
+	it.Pos = -2
 	return nil
 }
