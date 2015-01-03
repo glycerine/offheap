@@ -39,15 +39,15 @@ func (t *HashTable) DestroyHashTable() {
 }
 
 // Basic operations
-func (t *HashTable) Lookup(key int64) *Cell {
+func (t *HashTable) Lookup(key int64) (*Cell, int64) {
 
 	var cell *Cell
 
 	if key == 0 {
 		if t.zeroUsed {
-			return &t.zeroCell
+			return &t.zeroCell, -1
 		}
-		return nil
+		return nil, -2
 
 	} else {
 
@@ -120,9 +120,21 @@ func (t *HashTable) Insert(key int64) (*Cell, bool) {
 
 }
 
-func (t *HashTable) DeleteCell(pos int64) {
+func (t *HashTable) DeleteCell(cell *Cell) {
 
-	if pos != 0 {
+	if cell == t.zeroCell {
+		// Delete zero cell
+		if !t.zeroUsed {
+			panic("deleting zero element when not used")
+		}
+		t.zeroUsed = false
+		cell.Value = nil
+		t.population--
+		return
+
+	} else {
+
+		pos := (int64(cell) - int64(&t.cells[0])) / int64(unsafe.Sizeof(Cell))
 
 		// Delete from regular cells
 		if pos < 0 || pos >= t.arraySize {
@@ -179,15 +191,6 @@ func (t *HashTable) DeleteCell(pos int64) {
 				nei = 0
 			}
 		}
-	} else {
-		// Delete zero cell
-		if !t.zeroUsed {
-			panic("deleting zero element when not used")
-		}
-		t.zeroUsed = false
-		cell.Value = nil
-		t.population--
-		return
 	}
 
 }
@@ -212,7 +215,10 @@ func (t *HashTable) Compact() {
 }
 
 func (t *HashTable) DeleteKey(key int64) {
-
+	value := Lookup(key)
+	if value != nil {
+		t.DeleteCell(value)
+	}
 }
 
 func (t *HashTable) Compact() {
