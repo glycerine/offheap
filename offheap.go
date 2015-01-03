@@ -120,8 +120,9 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 		}
 	} else {
 
+		wasNew := false
 		if !t.ZeroUsed {
-
+			wasNew = true
 			t.ZeroUsed = true
 			t.Population++
 			if t.Population*4 >= t.ArraySize*3 {
@@ -129,7 +130,7 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 				t.Repopulate(t.ArraySize * 2)
 			}
 		}
-		return &t.ZeroCell, true
+		return &t.ZeroCell, wasNew
 	}
 
 }

@@ -38,4 +38,32 @@ func TestInsert(t *testing.T) {
 		cv.So(cell.Value, cv.ShouldEqual, 55)
 	})
 
+	h.Clear()
+	cv.Convey("Insert()-ing the same key twice should return false for the 2nd param on encountering the same key again. For 0 key.", t, func() {
+		cv.So(h.Population, cv.ShouldEqual, 0)
+		c, ok := h.Insert(0)
+		cv.So(c, cv.ShouldNotEqual, nil)
+		cv.So(c.Key, cv.ShouldEqual, 0)
+		cv.So(ok, cv.ShouldEqual, true)
+
+		c, ok = h.Insert(0)
+		cv.So(c, cv.ShouldNotEqual, nil)
+		cv.So(c.Key, cv.ShouldEqual, 0)
+		cv.So(ok, cv.ShouldEqual, false)
+	})
+
+	h.Clear()
+	cv.Convey("Insert()-ing the same key twice should return false for the 2nd param on encountering the same key again. For not-zero key.", t, func() {
+		cv.So(h.Population, cv.ShouldEqual, 0)
+		c, ok := h.Insert(1)
+		cv.So(c, cv.ShouldNotEqual, nil)
+		cv.So(c.Key, cv.ShouldEqual, 1)
+		cv.So(ok, cv.ShouldEqual, true)
+
+		c, ok = h.Insert(1)
+		cv.So(c, cv.ShouldNotEqual, nil)
+		cv.So(c.Key, cv.ShouldEqual, 1)
+		cv.So(ok, cv.ShouldEqual, false)
+	})
+
 }
