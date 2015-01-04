@@ -39,7 +39,7 @@ func TestDelete(t *testing.T) {
 				for j := i + 1; j < N; j++ {
 					cell = h.Lookup(uint64(j))
 					cv.So(cell, cv.ShouldNotEqual, nil)
-					cv.So(cell.HashedKey, cv.ShouldEqual, j)
+					cv.So(cell.UnHashedKey, cv.ShouldEqual, j)
 				}
 			} else {
 				cv.So(h.Population, cv.ShouldEqual, N)

@@ -44,6 +44,8 @@ func TestStringKeyInsertLookup(t *testing.T) {
 		cv.So(ok, cv.ShouldEqual, true)
 		cv.So(h.Population, cv.ShouldEqual, 1)
 
+		h.Dump()
+
 		val, ok := h.LookupStringKey("hello")
 		cv.So(val.(string), cv.ShouldEqual, "world")
 		cv.So(ok, cv.ShouldEqual, true)

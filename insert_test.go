@@ -43,12 +43,12 @@ func TestInsert(t *testing.T) {
 		cv.So(h.Population, cv.ShouldEqual, 0)
 		c, ok := h.Insert(0)
 		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(c.HashedKey, cv.ShouldEqual, 0)
+		cv.So(c.UnHashedKey, cv.ShouldEqual, 0)
 		cv.So(ok, cv.ShouldEqual, true)
 
 		c, ok = h.Insert(0)
 		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(c.HashedKey, cv.ShouldEqual, 0)
+		cv.So(c.UnHashedKey, cv.ShouldEqual, 0)
 		cv.So(ok, cv.ShouldEqual, false)
 	})
 
@@ -57,12 +57,12 @@ func TestInsert(t *testing.T) {
 		cv.So(h.Population, cv.ShouldEqual, 0)
 		c, ok := h.Insert(1)
 		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(c.HashedKey, cv.ShouldEqual, 1)
+		cv.So(c.UnHashedKey, cv.ShouldEqual, 1)
 		cv.So(ok, cv.ShouldEqual, true)
 
 		c, ok = h.Insert(1)
 		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(c.HashedKey, cv.ShouldEqual, 1)
+		cv.So(c.UnHashedKey, cv.ShouldEqual, 1)
 		cv.So(ok, cv.ShouldEqual, false)
 	})
 

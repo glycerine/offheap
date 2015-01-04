@@ -15,8 +15,8 @@ func HashEqualsMap(h *HashTable, m map[uint64]int) bool {
 			fmt.Printf("m had key '%v', but h did not.\n", k)
 			return false
 		}
-		if cell.Value.(int) != v {
-			fmt.Printf("m had key '%v':value '%v', but for that key, h had a different value: '%v'.\n", k, v, cell.Value.(int))
+		if cell.Value != v {
+			fmt.Printf("m had key '%v':value '%v', but for that key, h had a different value: '%v'.\n", k, v, cell.Value)
 			return false
 		}
 	}

@@ -7,7 +7,7 @@ import (
 
 // Copyright (C) 2015 by Jason E. Aten, Ph.D.
 //
-// Inspired by the public domain C++ code of
+// Initial HashTable implementation Inspired by the public domain C++ code of
 //    https://github.com/preshing/CompareIntegerMaps
 // See also
 //    http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/
@@ -19,33 +19,55 @@ import (
 //
 //  Maps pointer-sized integers to pointer-sized integers.
 //  Uses open addressing with linear probing.
-//  In the t.cells array, HashedKey = 0 is reserved to indicate an unused cell.
+//  In the t.cells array, UnHashedKey = 0 is reserved to indicate an unused cell.
 //  Actual value for key 0 (if any) is stored in t.zeroCell.
 //  The hash table automatically doubles in size when it becomes 75% full.
 //  The hash table never shrinks in size, even after Clear(), unless you explicitly
 //  call Compact().
 //----------------------------------------------
 
+type key_t [64]byte
+
 type Cell struct {
-	HashedKey uint64
-	ByteKey   []byte
-	Value     interface{}
+	UnHashedKey uint64
+	ByteKey     key_t
+	Value       interface{}
 }
 
 type HashTable struct {
-	Cells      []Cell
+	Cells      uintptr
+	CellSz     uint64
 	ArraySize  uint64
 	Population uint64
 	ZeroUsed   bool
 	ZeroCell   Cell
+	Offheap    []byte
 }
 
 func NewHashTable(initialSize uint64) *HashTable {
-	return &HashTable{
-		// todo: allocate this off-heap instead
-		Cells:     make([]Cell, initialSize),
-		ArraySize: initialSize,
+
+	t := HashTable{
+		CellSz: uint64(unsafe.Sizeof(Cell{})),
 	}
+	// off-heap version
+	t.ArraySize = initialSize
+	t.Offheap = make([]byte, t.ArraySize*t.CellSz)
+	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
+
+	// on-heap version: todo: allocate this off-heap instead.
+	//Cells:     make([]Cell, initialSize),
+
+	return &t
+}
+
+// t.CellAt(pos); replaces t.Cells[pos]
+func (t *HashTable) CellAt(pos uint64) *Cell {
+
+	// off heap version
+	return (*Cell)(unsafe.Pointer(uintptr(t.Cells) + uintptr(pos*t.CellSz)))
+
+	// on heap version
+	//return &(t.Cells[pos])
 }
 
 func (t *HashTable) DestroyHashTable() {
@@ -70,11 +92,12 @@ func (t *HashTable) Lookup(key uint64) *Cell {
 		h := integerHash(uint64(key)) % t.ArraySize
 
 		for {
-			cell = &(t.Cells[h])
-			if cell.HashedKey == key {
+			//cell = &(t.Cells[h]) // *Cell cannot be indexed
+			cell = t.CellAt(h)
+			if cell.UnHashedKey == key {
 				return cell
 			}
-			if cell.HashedKey == 0 {
+			if cell.UnHashedKey == 0 {
 				return nil
 			}
 			h++
@@ -104,13 +127,12 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 			h := integerHash(uint64(key)) % t.ArraySize
 
 			for {
-				cell = &(t.Cells[h])
-
-				if cell.HashedKey == key {
+				cell = t.CellAt(h)
+				if cell.UnHashedKey == key {
 					// already exists
 					return cell, false
 				}
-				if cell.HashedKey == 0 {
+				if cell.UnHashedKey == 0 {
 					if (t.Population+1)*4 >= t.ArraySize*3 {
 						VPrintf("detected (t.Population+1)*4 >= t.ArraySize*3, i.e. %v >= %v, calling Repop with double the size\n", (t.Population+1)*4, t.ArraySize*3)
 						t.Repopulate(t.ArraySize * 2)
@@ -118,7 +140,7 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 						break
 					}
 					t.Population++
-					cell.HashedKey = key
+					cell.UnHashedKey = key
 					return cell, true
 				}
 
@@ -166,14 +188,17 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 
 	} else {
 
-		pos := uint64((uintptr(unsafe.Pointer(cell)) - uintptr(unsafe.Pointer(&t.Cells[0]))) / uintptr(unsafe.Sizeof(Cell{})))
+		//pos := uint64((uintptr(unsafe.Pointer(cell)) - uintptr(unsafe.Pointer(&t.Cells[0]))) / uintptr(unsafe.Sizeof(Cell{}))) // *Cell does not support indexing
+		pos := uint64((uintptr(unsafe.Pointer(cell)) - uintptr(unsafe.Pointer(t.Cells))) / uintptr(unsafe.Sizeof(Cell{})))
 
 		// Delete from regular Cells
 		if pos < 0 || pos >= t.ArraySize {
 			panic(fmt.Sprintf("cell out of bounds: pos %v was < 0 or >= t.ArraySize == %v", pos, t.ArraySize))
 		}
-		if t.Cells[pos].HashedKey == 0 {
-			panic("zero HashedKey in non-zero Cell!")
+
+		//if t.Cells[pos].UnHashedKey == 0 { // *Cell cannot be indexed
+		if t.CellAt(pos).UnHashedKey == 0 {
+			panic("zero UnHashedKey in non-zero Cell!")
 		}
 
 		// Remove this cell by shuffling neighboring Cells so there are no gaps in anyone's probe chain
@@ -184,19 +209,21 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 		var neighbor *Cell
 		var circular_offset_ideal_pos int64
 		var circular_offset_ideal_nei int64
+		var cellPos *Cell
 
 		for {
-			neighbor = &t.Cells[nei]
+			neighbor = t.CellAt(nei)
 
-			if neighbor.HashedKey == 0 {
+			if neighbor.UnHashedKey == 0 {
 				// There's nobody to swap with. Go ahead and clear this cell, then return
-				t.Cells[pos].HashedKey = 0
-				t.Cells[pos].Value = nil
+				cellPos = t.CellAt(pos)
+				cellPos.UnHashedKey = 0 // *Cell cannot be indexed
+				cellPos.Value = nil     // *Cell cannot be indexed
 				t.Population--
 				return
 			}
 
-			ideal := integerHash(neighbor.HashedKey) % t.ArraySize
+			ideal := integerHash(neighbor.UnHashedKey) % t.ArraySize
 
 			if pos >= ideal {
 				circular_offset_ideal_pos = int64(pos) - int64(ideal)
@@ -214,7 +241,7 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 
 			if circular_offset_ideal_pos < circular_offset_ideal_nei {
 				// Swap with neighbor, then make neighbor the new cell to remove.
-				t.Cells[pos] = *neighbor
+				*t.CellAt(pos) = *neighbor
 				pos = nei
 			}
 
@@ -231,9 +258,8 @@ func (t *HashTable) Clear() {
 	// (Does not resize the array)
 	// Clear regular Cells
 
-	// todo, change to use off heap memory
-	for i := range t.Cells {
-		t.Cells[i] = Cell{}
+	for i := range t.Offheap {
+		t.Offheap[i] = 0
 	}
 	t.Population = 0
 
@@ -265,49 +291,35 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 		panic("must have t.Population * 4  <= desiredSize * 3")
 	}
 
-	// Get start/end pointers of old array
-	oldCells := t.Cells
+	// Allocate new table
+	s := NewHashTable(desiredSize)
 
-	// Allocate new array
-	t.ArraySize = desiredSize
-	t.Cells = make([]Cell, t.ArraySize)
-
-	// Iterate through old array
-	// (any zero entry can stay in place; so ignore HashedKey == 0 below).
-	var c *Cell
-	var pos uint64
-	for i := range oldCells {
-		{
-			c = &oldCells[i]
-			VPrintf("\n in oldCell copy loop, at i = %v, and c = '%#v'\n", i, c)
-			if c.HashedKey != 0 {
-				// Insert this element into new array
-				pos = integerHash(c.HashedKey) % t.ArraySize
-
-				VPrintf("   in Repop, pos = %v for c.HashedKey = %v and t.ArraySize = %v\n", pos, c.HashedKey, t.ArraySize)
-				for {
-					cell := &t.Cells[pos]
-					VPrintf("cell = %v, pos = %v, t.Cells = %v\n", cell, pos, t.Cells)
-
-					if cell.HashedKey == 0 {
-						// Insert here
-						*cell = *c
-						break
-					}
-					pos++
-					if pos >= t.ArraySize {
-						pos = 0
-					}
-				}
-			}
-		}
-
-		// Delete old array; happens when oldCells goes out of scope
-		// todo: delete in off-heap space
+	s.ZeroUsed = t.ZeroUsed
+	if t.ZeroUsed {
+		s.ZeroCell = t.ZeroCell
+		s.Population++
 	}
 
-	VPrintf("\n ---- Done with Repopulate, now t = \n")
-	VDump(t)
+	// Iterate through old table t, copy into new table s.
+	var c *Cell
+
+	for i := uint64(0); i < t.ArraySize; i++ {
+		c = t.CellAt(i)
+		VPrintf("\n in oldCell copy loop, at i = %v, and c = '%#v'\n", i, c)
+		if c.UnHashedKey != 0 {
+			// Insert this element into new table
+			cell, ok := s.Insert(c.UnHashedKey)
+			if !ok {
+				panic(fmt.Sprintf("key '%v' already exists in fresh table s: should be impossible", c.UnHashedKey))
+			}
+			*cell = *c
+		}
+	}
+
+	VPrintf("\n ---- Done with Repopulate, now s = \n")
+	VDump(s)
+
+	*t = *s
 }
 
 //----------------------------------------------
@@ -350,8 +362,8 @@ func (it *Iterator) Next() *Cell {
 	// Iterate through the regular Cells
 	it.Pos++
 	for uint64(it.Pos) != it.Tab.ArraySize {
-		it.Cur = &it.Tab.Cells[it.Pos]
-		if it.Cur.HashedKey != 0 {
+		it.Cur = it.Tab.CellAt(uint64(it.Pos))
+		if it.Cur.UnHashedKey != 0 {
 			return it.Cur
 		}
 		it.Pos++
@@ -361,4 +373,11 @@ func (it *Iterator) Next() *Cell {
 	it.Cur = nil
 	it.Pos = -2
 	return nil
+}
+
+func (t *HashTable) Dump() {
+	for i := uint64(0); i < t.ArraySize; i++ {
+		cell := t.CellAt(i)
+		fmt.Printf("dump cell %d: \n cell.UnHashedKey: '%v'\n cell.ByteKey: '%s'\n cell.Value: '%#v'\n ===============", i, cell.UnHashedKey, string(cell.ByteKey[:]), cell.Value)
+	}
 }
