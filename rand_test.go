@@ -1,8 +1,10 @@
 package offheap_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/glycerine/go-offheap-hashtable"
 	cv "github.com/smartystreets/goconvey/convey"
@@ -37,7 +39,9 @@ func TestRandomOperationsOrder(t *testing.T) {
 
 		// now do random operations
 		N := 1000
-		gen := rand.New(rand.NewSource(99))
+		seed := time.Now().UnixNano()
+		fmt.Printf("\n TestRandomOperationsOrder() using seed = '%v'\n", seed)
+		gen := rand.New(rand.NewSource(seed))
 
 		for i := 0; i < N; i++ {
 
