@@ -6,7 +6,7 @@ import xxh64 "github.com/glycerine/xxhash-64"
 
 // use the 64-bit implimentation of XXHash for speed.
 // see
-//   https://github.com/OneOfOne/xxhash
+//   https://github.com/OneOfOne/xxhash (github.com/glycerine/xxhash-64 version-locks)
 //   http://fastcompression.blogspot.com/2014/07/xxhash-wider-64-bits.html
 //
 var xxHasher64 = xxh64.New64()
