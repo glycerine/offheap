@@ -76,6 +76,9 @@ func TestRandomStringOps(t *testing.T) {
 			}
 		}
 
+		fmt.Printf("\n === h at the end of %d string ops, 75%% inserts:\n", N)
+		h.DumpStringKey()
+
 		// distribution more emphasizing deletes
 
 		for i := 0; i < N; i++ {

@@ -106,7 +106,7 @@ func (t *HashTable) DeleteStringKey(strkey string) bool {
 
 func (t *HashTable) DumpStringKey() {
 
-	fmt.Printf(" DumpStringKey(): \n")
+	fmt.Printf(" DumpStringKey(): (table ArraySize: %d\n", t.ArraySize)
 	for it := NewIterator(t); it.Cur != nil; it.Next() {
 		fmt.Printf("  '%v' -> %v\n", string(it.Cur.ByteKey), it.Cur.Value)
 	}
