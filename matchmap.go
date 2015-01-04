@@ -1,6 +1,9 @@
 package offheap
 
-import "fmt"
+import (
+	"encoding/binary"
+	"fmt"
+)
 
 // compare for correctness checking
 func HashEqualsMap(h *HashTable, m map[uint64]int) bool {
@@ -15,7 +18,7 @@ func HashEqualsMap(h *HashTable, m map[uint64]int) bool {
 			fmt.Printf("m had key '%v', but h did not.\n", k)
 			return false
 		}
-		if cell.Value != v {
+		if cell.GetInt() != v {
 			fmt.Printf("m had key '%v':value '%v', but for that key, h had a different value: '%v'.\n", k, v, cell.Value)
 			return false
 		}
@@ -34,8 +37,11 @@ func StringHashEqualsMap(h *HashTable, m map[string]int) bool {
 			fmt.Printf("m had key '%v', but h did not.\n", k)
 			return false
 		}
-		if val.(int) != v {
-			fmt.Printf("m had key '%v':value '%v', but for that key, h had a different value: '%v'.\n", k, v, val.(int))
+
+		n := int(binary.LittleEndian.Uint64(val[:8]))
+
+		if n != v {
+			fmt.Printf("m had key '%v':value '%v', but for that key, h had a different value: '%v'.\n", k, v, n)
 			return false
 		}
 	}

@@ -1,6 +1,7 @@
 package offheap
 
 import (
+	"encoding/binary"
 	"fmt"
 	"unsafe"
 )
@@ -27,11 +28,57 @@ import (
 //----------------------------------------------
 
 type key_t [64]byte
+type Val_t [64]byte
 
 type Cell struct {
 	UnHashedKey uint64
 	ByteKey     key_t
-	Value       interface{}
+	Value       Val_t
+}
+
+func (cell *Cell) SetValue(v interface{}) {
+	switch a := v.(type) {
+	case string:
+		cell.SetString(a)
+	case int:
+		cell.SetInt(a)
+	default:
+		panic("unsupported type")
+	}
+}
+
+func (cell *Cell) ZeroValue() {
+	for i := range cell.Value[:] {
+		cell.Value[i] = 0
+	}
+}
+
+func (cell *Cell) SetString(s string) {
+	copy(cell.Value[:], []byte(s))
+}
+func (cell *Cell) GetString() string {
+	return string([]byte(cell.Value[:]))
+}
+
+func (cell *Cell) SetInt(n int) {
+	binary.LittleEndian.PutUint64(cell.Value[:8], uint64(n))
+}
+func (cell *Cell) GetInt() int {
+	return int(binary.LittleEndian.Uint64(cell.Value[:8]))
+}
+
+func (v *Val_t) SetInt(n int) {
+	binary.LittleEndian.PutUint64((*v)[:8], uint64(n))
+}
+func (v *Val_t) GetInt() int {
+	return int(binary.LittleEndian.Uint64((*v)[:8]))
+}
+
+func (v *Val_t) SetString(s string) {
+	copy((*v)[:], []byte(s))
+}
+func (v *Val_t) GetString() string {
+	return string([]byte((*v)[:]))
 }
 
 type HashTable struct {
@@ -170,7 +217,7 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 
 func (t *HashTable) InsertIntValue(key uint64, value int) bool {
 	cell, ok := t.Insert(key)
-	cell.Value = value
+	cell.SetValue(value)
 	return ok
 }
 
@@ -182,7 +229,7 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 			panic("deleting zero element when not used")
 		}
 		t.ZeroUsed = false
-		cell.Value = nil
+		cell.ZeroValue()
 		t.Population--
 		return
 
@@ -218,7 +265,7 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 				// There's nobody to swap with. Go ahead and clear this cell, then return
 				cellPos = t.CellAt(pos)
 				cellPos.UnHashedKey = 0 // *Cell cannot be indexed
-				cellPos.Value = nil     // *Cell cannot be indexed
+				cellPos.ZeroValue()
 				t.Population--
 				return
 			}
@@ -265,7 +312,7 @@ func (t *HashTable) Clear() {
 
 	// Clear zero cell
 	t.ZeroUsed = false
-	t.ZeroCell.Value = 0
+	t.ZeroCell.ZeroValue()
 }
 
 func (t *HashTable) Compact() {

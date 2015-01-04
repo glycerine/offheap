@@ -76,8 +76,8 @@ func TestRandomStringOps(t *testing.T) {
 			}
 		}
 
-		fmt.Printf("\n === h at the end of %d string ops, 75%% inserts:\n", N)
-		h.DumpStringKey()
+		//fmt.Printf("\n === h at the end of %d string ops, 75%% inserts:\n", N)
+		//h.DumpStringKey()
 
 		// distribution more emphasizing deletes
 
@@ -99,7 +99,7 @@ func TestRandomStringOps(t *testing.T) {
 			}
 		}
 
-		fmt.Printf("\n === h at the end of %d string ops:\n", N)
-		h.DumpStringKey()
+		//fmt.Printf("\n === h at the end of %d string ops:\n", N)
+		//h.DumpStringKey()
 	})
 }

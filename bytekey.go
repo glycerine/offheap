@@ -25,7 +25,7 @@ func (t *HashTable) InsertBK(bytekey []byte, value interface{}) bool {
 	hashkey := xxHasher64.Sum64()
 	cell, ok := t.Insert(hashkey)
 	copy(cell.ByteKey[:], bytekey)
-	cell.Value = value
+	cell.SetValue(value)
 	return ok
 }
 
@@ -36,7 +36,7 @@ func minimum(a, b int) int {
 	return b
 }
 
-func (t *HashTable) LookupBK(bytekey []byte) (interface{}, bool) {
+func (t *HashTable) LookupBK(bytekey []byte) (Val_t, bool) {
 	xxHasher64.Reset()
 	min := minimum(len(key_t{}), len(bytekey))
 	_, err := xxHasher64.Write(bytekey[:min])
@@ -46,7 +46,7 @@ func (t *HashTable) LookupBK(bytekey []byte) (interface{}, bool) {
 	hashkey := xxHasher64.Sum64()
 	cell := t.Lookup(hashkey)
 	if cell == nil {
-		return nil, false
+		return Val_t{}, false
 	}
 	return cell.Value, true
 }
@@ -81,13 +81,13 @@ func (t *HashTable) InsertStringKey(strkey string, value interface{}) bool {
 	hashkey := xxHasher64.Sum64()
 	cell, ok := t.Insert(hashkey)
 	cell.ByteKey = bytekey
-	cell.Value = value
-	fmt.Printf("assigned value : '%v'  to key: '%v', with strkey: '%v'\n", value, hashkey, strkey)
+	cell.SetValue(value)
+	//fmt.Printf("assigned value : '%v'  to key: '%v', with strkey: '%v'\n", value, hashkey, strkey)
 
 	return ok
 }
 
-func (t *HashTable) LookupStringKey(strkey string) (interface{}, bool) {
+func (t *HashTable) LookupStringKey(strkey string) (Val_t, bool) {
 	xxHasher64.Reset()
 	min := minimum(len(key_t{}), len(strkey))
 	var bytekey key_t
@@ -99,7 +99,7 @@ func (t *HashTable) LookupStringKey(strkey string) (interface{}, bool) {
 	hashkey := xxHasher64.Sum64()
 	cell := t.Lookup(hashkey)
 	if cell == nil {
-		return nil, false
+		return Val_t{}, false
 	}
 	return cell.Value, true
 }
