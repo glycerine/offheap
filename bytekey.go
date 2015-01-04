@@ -1,6 +1,10 @@
 package offheap
 
-import xxh64 "github.com/glycerine/xxhash-64"
+import (
+	"fmt"
+
+	xxh64 "github.com/glycerine/xxhash-64"
+)
 
 // the byte-key (BK) interface to the hash table
 
@@ -98,4 +102,13 @@ func (t *HashTable) DeleteStringKey(strkey string) bool {
 
 	t.DeleteCell(cell)
 	return true
+}
+
+func (t *HashTable) DumpStringKey() {
+
+	fmt.Printf(" DumpStringKey(): \n")
+	for it := NewIterator(t); it.Cur != nil; it.Next() {
+		fmt.Printf("  '%v' -> %v\n", string(it.Cur.ByteKey), it.Cur.Value)
+	}
+
 }

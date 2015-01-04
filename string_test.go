@@ -20,10 +20,10 @@ func TestRandomStringOps(t *testing.T) {
 
 	// make a reference array that maps i -> hex string version,
 	// for testing the string <-> int hashmap implementation
-	M := 10
+	M := 36
 	nm := make([]Num, M)
 	for i := 0; i < M; i++ {
-		nm[i].name = strconv.FormatInt(int64(i), 16)
+		nm[i].name = strconv.FormatInt(int64(i), 36)
 		nm[i].num = i
 	}
 
@@ -95,5 +95,8 @@ func TestRandomStringOps(t *testing.T) {
 				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
 			}
 		}
+
+		fmt.Printf("\n === h at the end of %d string ops:\n", N)
+		h.DumpStringKey()
 	})
 }
