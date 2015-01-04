@@ -28,6 +28,7 @@ import (
 
 type Cell struct {
 	HashedKey uint64
+	ByteKey   []byte
 	Value     interface{}
 }
 
