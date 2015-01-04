@@ -1,8 +1,11 @@
 package offheap_test
 
 import (
+	"fmt"
+	"math/rand"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/glycerine/go-offheap-hashtable"
 	cv "github.com/smartystreets/goconvey/convey"
@@ -49,52 +52,48 @@ func TestRandomStringOps(t *testing.T) {
 		h.DeleteStringKey(nm[1].name)
 		cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
-		/*
-			// now do random operations
-			N := 1000
-			seed := time.Now().UnixNano()
-			fmt.Printf("\n TestRandomOperationsOrder() using seed = '%v'\n", seed)
-			gen := rand.New(rand.NewSource(seed))
+		// now do random operations
+		N := 1000
+		seed := time.Now().UnixNano()
+		fmt.Printf("\n TestRandomOperationsOrder() using seed = '%v'\n", seed)
+		gen := rand.New(rand.NewSource(seed))
 
-			for i := 0; i < N; i++ {
+		for i := 0; i < N; i++ {
 
-				op := gen.Int() % 4
-				k := uint64(gen.Int() % (N / 4))
-				v := gen.Int() % (N / 4)
+			op := gen.Int() % 4
+			w := uint64(gen.Int() % M)
 
-				switch op {
-				case 0, 1, 2:
-					h.InsertIntValue(k, v)
-					m[k] = v
-					cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
-				case 3:
-					h.DeleteKey(uint64(k))
-					delete(m, k)
-					cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+			switch op {
+			case 0, 1, 2:
+				m[nm[w].name] = nm[w].num
+				h.InsertStringKey(nm[w].name, nm[w].num)
+				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
-				}
+			case 3:
+				delete(m, nm[w].name)
+				h.DeleteStringKey(nm[w].name)
+				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
 			}
+		}
 
-			// distribution more emphasizing deletes
+		// distribution more emphasizing deletes
 
-			for i := 0; i < N; i++ {
+		for i := 0; i < N; i++ {
 
-				op := gen.Int() % 2
-				k := uint64(gen.Int() % (N / 5))
-				v := gen.Int() % (N / 2)
+			op := gen.Int() % 2
+			w := uint64(gen.Int() % M)
 
-				switch op {
-				case 0:
-					h.InsertIntValue(k, v)
-					m[k] = v
-					cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
-				case 1:
-					h.DeleteKey(uint64(k))
-					delete(m, k)
-					cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+			switch op {
+			case 0:
+				m[nm[w].name] = nm[w].num
+				h.InsertStringKey(nm[w].name, nm[w].num)
+				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
-				}
+			case 1:
+				delete(m, nm[w].name)
+				h.DeleteStringKey(nm[w].name)
+				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
 			}
-		*/
+		}
 	})
 }
