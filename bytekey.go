@@ -38,6 +38,22 @@ func (t *HashTable) LookupBK(bytekey []byte) (interface{}, bool) {
 	return cell.Value, true
 }
 
+func (t *HashTable) DeleteBK(bytekey []byte) bool {
+	xxHasher64.Reset()
+	_, err := xxHasher64.Write(bytekey)
+	if err != nil {
+		panic(err)
+	}
+	hashkey := xxHasher64.Sum64()
+	cell := t.Lookup(hashkey)
+	if cell == nil {
+		return false
+	}
+
+	t.DeleteCell(cell)
+	return true
+}
+
 func (t *HashTable) InsertStringKey(strkey string, value interface{}) bool {
 	xxHasher64.Reset()
 	bytekey := []byte(strkey)
@@ -65,4 +81,21 @@ func (t *HashTable) LookupStringKey(strkey string) (interface{}, bool) {
 		return nil, false
 	}
 	return cell.Value, true
+}
+
+func (t *HashTable) DeleteStringKey(strkey string) bool {
+	xxHasher64.Reset()
+	bytekey := []byte(strkey)
+	_, err := xxHasher64.Write(bytekey)
+	if err != nil {
+		panic(err)
+	}
+	hashkey := xxHasher64.Sum64()
+	cell := t.Lookup(hashkey)
+	if cell == nil {
+		return false
+	}
+
+	t.DeleteCell(cell)
+	return true
 }
