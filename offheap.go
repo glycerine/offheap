@@ -62,10 +62,12 @@ type Cell struct {
 	Value       Val_t  `capid:"2"` // customize this to hold your value's data type entirely here.
 }
 
-// SetValue stores any value v in the Cell. Note that
-//  users of the library will need to extend this for
-//  their type. Only strings of length less than 56,
-//  and integers are handled by default.
+/*
+SetValue stores any value v in the Cell. Note that
+users of the library will need to extend this for
+their type. Only strings of length less than 56,
+and integers are handled by default.
+*/
 func (cell *Cell) SetValue(v interface{}) {
 	switch a := v.(type) {
 	case string:

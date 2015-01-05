@@ -53,16 +53,17 @@ func (mm *MmapMalloc) Free() {
 }
 
 //
-// offheap.Malloc()
+//offheap.Malloc()
 //
-// If path is not empty then we memory map to the give path as well.
-// Otherwise it is just like a call to malloc(): an anonymous memory allocation, outside the realm
-// of the Go Garbage Collector.
+//If path is not empty then we memory map to the give path as well.
+//Otherwise it is just like a call to malloc(): an anonymous memory allocation, outside the realm
+//of the Go Garbage Collector.
 //
-// if numBytes is -1, then we take the size from the path file's size.
+//if numBytes is -1, then we take the size from the path file's size.
 //
-// return value:
-//    .Mem holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
+//return value
+//
+//.Mem holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
 //
 func Malloc(numBytes int64, path string) *MmapMalloc {
 
