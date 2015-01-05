@@ -8,13 +8,13 @@ import (
 
 var verbose bool
 
-func VPrintf(format string, a ...interface{}) {
+func vprintf(format string, a ...interface{}) {
 	if verbose {
 		fmt.Printf(format, a...)
 	}
 }
 
-func VDump(i interface{}) {
+func vdump(i interface{}) {
 	if verbose {
 		goon.Dump(i)
 	}

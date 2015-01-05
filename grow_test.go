@@ -31,7 +31,7 @@ func TestGrowth(t *testing.T) {
 			cv.So(ok, cv.ShouldEqual, true)
 		}
 		cv.So(h.Population, cv.ShouldEqual, N)
-		cv.So(h.ArraySize, cv.ShouldEqual, offheap.Upper_power_of_two(uint64(float64(N)*4.0/3.0)))
+		cv.So(h.ArraySize, cv.ShouldEqual, upper_power_of_two(uint64(float64(N)*4.0/3.0)))
 
 		for i := 0; i < N; i++ {
 			cell := h.Lookup(uint64(i))
@@ -42,4 +42,16 @@ func TestGrowth(t *testing.T) {
 		cv.So(cell, cv.ShouldEqual, nil)
 
 	})
+}
+
+func upper_power_of_two(v uint64) uint64 {
+	v--
+	v |= v >> 1
+	v |= v >> 2
+	v |= v >> 4
+	v |= v >> 8
+	v |= v >> 16
+	v |= v >> 32
+	v++
+	return v
 }

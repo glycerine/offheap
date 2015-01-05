@@ -185,12 +185,12 @@ func (t *HashTable) Lookup(key uint64) *Cell {
 // value in the *Cell returned.
 func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 
-	VPrintf("\n ---- Insert(%v) called with t = \n", key)
-	VDump(t)
+	vprintf("\n ---- Insert(%v) called with t = \n", key)
+	vdump(t)
 
 	defer func() {
-		VPrintf("\n ---- Insert(%v) done, with t = \n", key)
-		VDump(t)
+		vprintf("\n ---- Insert(%v) done, with t = \n", key)
+		vdump(t)
 	}()
 
 	var cell *Cell
@@ -208,7 +208,7 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 				}
 				if cell.UnHashedKey == 0 {
 					if (t.Population+1)*4 >= t.ArraySize*3 {
-						VPrintf("detected (t.Population+1)*4 >= t.ArraySize*3, i.e. %v >= %v, calling Repop with double the size\n", (t.Population+1)*4, t.ArraySize*3)
+						vprintf("detected (t.Population+1)*4 >= t.ArraySize*3, i.e. %v >= %v, calling Repop with double the size\n", (t.Population+1)*4, t.ArraySize*3)
 						t.Repopulate(t.ArraySize * 2)
 						// resized, so start all over
 						break
@@ -346,7 +346,7 @@ func (t *HashTable) Clear() {
 // Compact will compress the hashtable so that it is at most
 // 75% full.
 func (t *HashTable) Compact() {
-	t.Repopulate(Upper_power_of_two((t.Population*4 + 3) / 3))
+	t.Repopulate(upper_power_of_two((t.Population*4 + 3) / 3))
 }
 
 // DeleteKey will delete the contents of the cell associated with key.
@@ -360,8 +360,8 @@ func (t *HashTable) DeleteKey(key uint64) {
 // Repopulate expands the hashtable to the desiredSize count of cells.
 func (t *HashTable) Repopulate(desiredSize uint64) {
 
-	VPrintf("\n ---- Repopulate called with t = \n")
-	VDump(t)
+	vprintf("\n ---- Repopulate called with t = \n")
+	vdump(t)
 
 	if desiredSize&(desiredSize-1) != 0 {
 		panic("desired size must be a power of 2")
@@ -384,7 +384,7 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 
 	for i := uint64(0); i < t.ArraySize; i++ {
 		c = t.CellAt(i)
-		VPrintf("\n in oldCell copy loop, at i = %v, and c = '%#v'\n", i, c)
+		vprintf("\n in oldCell copy loop, at i = %v, and c = '%#v'\n", i, c)
 		if c.UnHashedKey != 0 {
 			// Insert this element into new table
 			cell, ok := s.Insert(c.UnHashedKey)
@@ -395,8 +395,8 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 		}
 	}
 
-	VPrintf("\n ---- Done with Repopulate, now s = \n")
-	VDump(s)
+	vprintf("\n ---- Done with Repopulate, now s = \n")
+	vdump(s)
 
 	t.DestroyHashTable()
 

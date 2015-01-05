@@ -11,7 +11,7 @@ func upper_power_of_two32(v uint32) uint32 {
 	return v
 }
 
-func Upper_power_of_two(v uint64) uint64 {
+func upper_power_of_two(v uint64) uint64 {
 	v--
 	v |= v >> 1
 	v |= v >> 2

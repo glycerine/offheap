@@ -129,7 +129,7 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 
 	prot := syscall.PROT_READ | syscall.PROT_WRITE
 
-	VPrintf("\n ------->> path = '%v',  mm.Fd = %v, with flags = %x, sz = %v,  prot = '%v'\n", path, mm.Fd, flags, sz, prot)
+	vprintf("\n ------->> path = '%v',  mm.Fd = %v, with flags = %x, sz = %v,  prot = '%v'\n", path, mm.Fd, flags, sz, prot)
 
 	var mmap []byte
 	var err error
