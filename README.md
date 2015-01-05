@@ -3,7 +3,7 @@ offheap (formerly go-offheap-hashtable)
 
 Docs:
 
-    http://godoc.org/github.com/glycerine/offheap
+http://godoc.org/github.com/glycerine/offheap
 
 When GC pauses are long because you've got big hash tables in Go, you need an off-heap hash-table.
 
