@@ -10,8 +10,7 @@ When GC pauses are long because you've got big hash tables in Go, you need an of
  We accomplish this by writing our own Malloc() and Free() implementation
  (see malloc.go) which requests memory directly from the OS.
  The keys, the values, and the entire hash table itself is kept 
- in this off-heap storage. This storage can also optionally be backed by memory mapped file
- for speedy persistence and fast startup times.
+ in this off-heap storage. This storage can also optionally be backed by a memory mapped file for speedy persistence and fast startup times.
 
  See offheap.go for all the interesting code. Modify val_t to hold
  you values, and key_t to contain your keys. Current sample code
