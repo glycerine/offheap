@@ -1,54 +1,26 @@
 package offheap
 
 import (
-	"encoding/binary"
 	"fmt"
 	"unsafe"
+
+	capn "github.com/glycerine/go-capnproto"
 )
 
 // Copyright (C) 2015 by Jason E. Aten, Ph.D.
 //
-// Initial HashTable implementation inspired by the public domain C++ code of
-//    https://github.com/preshing/CompareIntegerMaps
-// See also
-//    http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/
-// for performance studies of the C++ code.
-//
-// The purpose here is to have hash table that can work away
-// from Go's Garbage Collector, to avoid long GC pause times.
-//
-// We accomplish this by writing our own Malloc() and Free() implementation
-// (see malloc.go) which requests memory directly from the OS.
-// The keys, values, and entire hash table is kept on off-heap
-// storage. This storage can also optionally be backed by memory mapped file
-// for speedy persistence and fast startup times.
-//
-
-//----------------------------------------------
-//  HashTable
-//
-//  Maps pointer-sized integers to Cell structures, which in turn hold Val_t
-//   as well as key_t structures.
-//
-//  Uses open addressing with linear probing. This makes it very cache
-//   friendly and thus very fast.
-//
-//  In the t.Cells array, UnHashedKey = 0 is reserved to indicate an unused cell.
-//  Actual value for key 0 (if any) is stored in t.ZeroCell.
-//  The hash table automatically doubles in size when it becomes 75% full.
-//  The hash table never shrinks in size, even after Clear(), unless you explicitly
-//  call Compact().
-//----------------------------------------------
 
 type key_t [64]byte
+
 type Val_t [56]byte
 
 type Cell struct {
-	UnHashedKey uint64 `capid:"0"`
-	ByteKey     key_t  `capid:"1"`
-	Value       Val_t  `capid:"2"` // customize this to hold your value's data type entirely here.
+	UnHashedKey uint64
+	ByteKey     key_t
+	Value       capn.Object
 }
 
+/*
 func (cell *Cell) SetValue(v interface{}) {
 	switch a := v.(type) {
 	case string:
@@ -59,13 +31,13 @@ func (cell *Cell) SetValue(v interface{}) {
 		panic("unsupported type")
 	}
 }
+*/
 
 func (cell *Cell) ZeroValue() {
-	for i := range cell.Value[:] {
-		cell.Value[i] = 0
-	}
+	cell.Value = capn.Object{}
 }
 
+/*
 func (cell *Cell) SetString(s string) {
 	copy(cell.Value[:], []byte(s))
 }
@@ -93,16 +65,52 @@ func (v *Val_t) SetString(s string) {
 func (v *Val_t) GetString() string {
 	return string([]byte((*v)[:]))
 }
+*/
 
+// The purpose here is to have hash table that can work away
+// from Go's Garbage Collector, to avoid long GC pause times.
+//
+// We accomplish this by writing our own Malloc() and Free() implementation
+// (see malloc.go) which requests memory directly from the OS.
+// The keys, values, and entire hash table is kept on off-heap
+// storage. This storage can also optionally be backed by memory mapped file
+// for speedy persistence and fast startup times.
+//
+// Initial HashTable implementation inspired by the public domain C++ code of
+//    https://github.com/preshing/CompareIntegerMaps
+// See also
+//    http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/
+// for performance studies of the C++ code.
+//
+//
+//----------------------------------------------
+//  HashTable
+//
+//  Maps pointer-sized integers to Cell structures, which in turn hold Val_t
+//   as well as key_t structures.
+//
+//  Uses open addressing with linear probing. This makes it very cache
+//   friendly and thus very fast.
+//
+//  In the t.Cells array, UnHashedKey = 0 is reserved to indicate an unused
+//   cell.
+//
+//  Actual value for key 0 (if any) is stored in t.ZeroCell.
+//  The hash table automatically doubles in size when it becomes 75% full.
+//  The hash table never shrinks in size, even after Clear(), unless you
+//  explicitly call Compact().
+//----------------------------------------------
+//
 type HashTable struct {
-	Cells      uintptr    `capid:"0"`
-	CellSz     uint64     `capid:"1"`
-	ArraySize  uint64     `capid:"2"`
-	Population uint64     `capid:"3"`
-	ZeroUsed   bool       `capid:"4"`
-	ZeroCell   Cell       `capid:"5"`
-	Offheap    []byte     `capid:"6"`
-	Mmm        MmapMalloc `capid:"7"`
+	Cells      uintptr      `capid:"0"`
+	CellSz     uint64       `capid:"1"`
+	ArraySize  uint64       `capid:"2"`
+	Population uint64       `capid:"3"`
+	ZeroUsed   bool         `capid:"4"`
+	ZeroCell   Cell         `capid:"5"`
+	Offheap    []byte       `capid:"6"`
+	Mmm        MmapMalloc   `capid:"7"`
+	seg        capn.Segment `capid:"skip"`
 }
 
 func NewHashTable(initialSize uint64) *HashTable {
@@ -116,6 +124,8 @@ func NewHashTable(initialSize uint64) *HashTable {
 	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz), "")
 	t.Offheap = t.Mmm.Mem
 	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
+
+	t.seg = *capn.NewBuffer(t.Offheap)
 
 	// off-gc but still on-heap version
 	//	t.ArraySize = initialSize
@@ -233,12 +243,6 @@ func (t *HashTable) Insert(key uint64) (*Cell, bool) {
 		return &t.ZeroCell, wasNew
 	}
 
-}
-
-func (t *HashTable) InsertIntValue(key uint64, value int) bool {
-	cell, ok := t.Insert(key)
-	cell.SetValue(value)
-	return ok
 }
 
 func (t *HashTable) DeleteCell(cell *Cell) {

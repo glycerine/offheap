@@ -10,6 +10,12 @@ import (
 	cv "github.com/smartystreets/goconvey/convey"
 )
 
+func (t *HashTable) insertIntValue(key uint64, value int) bool {
+	cell, ok := t.Insert(key)
+	cell.SetValue(value)
+	return ok
+}
+
 func TestRandomOperationsOrder(t *testing.T) {
 
 	h := offheap.NewHashTable(2)
@@ -21,11 +27,11 @@ func TestRandomOperationsOrder(t *testing.T) {
 
 		// basic insert
 		m[1] = 2
-		h.InsertIntValue(1, 2)
+		h.insertIntValue(1, 2)
 		cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		m[3] = 4
-		h.InsertIntValue(3, 4)
+		h.insertIntValue(3, 4)
 		cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		// basic delete
@@ -51,7 +57,7 @@ func TestRandomOperationsOrder(t *testing.T) {
 
 			switch op {
 			case 0, 1, 2:
-				h.InsertIntValue(k, v)
+				h.insertIntValue(k, v)
 				m[k] = v
 				cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
 			case 3:
@@ -72,7 +78,7 @@ func TestRandomOperationsOrder(t *testing.T) {
 
 			switch op {
 			case 0:
-				h.InsertIntValue(k, v)
+				h.insertIntValue(k, v)
 				m[k] = v
 				cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
 			case 1:

@@ -1,10 +1,6 @@
 package offheap
 
-import (
-	"encoding/binary"
-	"fmt"
-)
-
+/*
 // compare for correctness checking
 func HashEqualsMap(h *HashTable, m map[uint64]int) bool {
 	if h.Population != uint64(len(m)) {
@@ -25,6 +21,7 @@ func HashEqualsMap(h *HashTable, m map[uint64]int) bool {
 	}
 	return true
 }
+
 
 func StringHashEqualsMap(h *HashTable, m map[string]int) bool {
 	if h.Population != uint64(len(m)) {
@@ -47,3 +44,4 @@ func StringHashEqualsMap(h *HashTable, m map[string]int) bool {
 	}
 	return true
 }
+*/

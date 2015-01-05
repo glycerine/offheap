@@ -81,11 +81,11 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 
 	} else {
 
-		if DirExists(mm.Path) {
+		if dirExists(mm.Path) {
 			panic(fmt.Sprintf("path '%s' already exists as a directory, so cannot be used as a memory mapped file.", mm.Path))
 		}
 
-		if !FileExists(mm.Path) {
+		if !fileExists(mm.Path) {
 			file, err := os.Create(mm.Path)
 			if err != nil {
 				panic(err)

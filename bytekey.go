@@ -1,10 +1,6 @@
 package offheap
 
-import (
-	"fmt"
-
-	xxh64 "github.com/glycerine/xxhash-64"
-)
+import xxh64 "github.com/glycerine/xxhash-64"
 
 // the byte-key (BK) interface to the hash table
 
@@ -14,6 +10,15 @@ import (
 //   http://fastcompression.blogspot.com/2014/07/xxhash-wider-64-bits.html
 //
 var xxHasher64 = xxh64.New64()
+
+func minimum(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+/*
 
 func (t *HashTable) InsertBK(bytekey []byte, value interface{}) bool {
 	xxHasher64.Reset()
@@ -27,13 +32,6 @@ func (t *HashTable) InsertBK(bytekey []byte, value interface{}) bool {
 	copy(cell.ByteKey[:], bytekey)
 	cell.SetValue(value)
 	return ok
-}
-
-func minimum(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 func (t *HashTable) LookupBK(bytekey []byte) (Val_t, bool) {
@@ -87,7 +85,19 @@ func (t *HashTable) InsertStringKey(strkey string, value interface{}) bool {
 	return ok
 }
 
-func (t *HashTable) LookupStringKey(strkey string) (Val_t, bool) {
+func HashString(s string) uint64 {
+	xxHasher64.Reset()
+	u := []byte(s)
+	min := minimum(len(key_t{}), len(u))
+	_, err := xxHasher64.Write(u[:min])
+	if err != nil {
+		panic(err)
+	}
+	hashkey := xxHasher64.Sum64()
+	return hashkey
+}
+
+func (t *HashTable) LookupStringKey(strkey string) (capn.Object, bool) {
 	xxHasher64.Reset()
 	min := minimum(len(key_t{}), len(strkey))
 	var bytekey key_t
@@ -99,7 +109,7 @@ func (t *HashTable) LookupStringKey(strkey string) (Val_t, bool) {
 	hashkey := xxHasher64.Sum64()
 	cell := t.Lookup(hashkey)
 	if cell == nil {
-		return Val_t{}, false
+		return capn.Object{}, false
 	}
 	return cell.Value, true
 }
@@ -131,3 +141,4 @@ func (t *HashTable) DumpStringKey() {
 	}
 
 }
+*/
