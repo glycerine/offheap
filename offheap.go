@@ -55,7 +55,12 @@ type Key_t [64]byte
 // size at the very least.
 type Val_t [56]byte
 
-// Cell is the basic payload struct, stored inline in the HashTable.
+// Cell is the basic payload struct, stored inline in the HashTable. The
+// cell is returned by the fundamental Lookup() function. The member
+// Value is where the value that corresponds to the key (in ByteKey)
+// is stored. Both the key (in ByteKey) and the value (in Value) are
+// stored inline inside the hashtable, so that all storage for
+// the hashtable is in the same offheap segment.
 type Cell struct {
 	UnHashedKey uint64 `capid:"0"`
 	ByteKey     Key_t  `capid:"1"`
