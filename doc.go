@@ -67,6 +67,9 @@ https://gist.github.com/mish15/9822474
 
 https://groups.google.com/forum/#!topic/golang-nuts/kCQP6S6ZGh0
 
+not fully off-heap, but using a slice instead of a map appears to help GC quite alot too:
+
+https://github.com/cespare/kvcache/blob/master/refmap.go
 
 
 */
