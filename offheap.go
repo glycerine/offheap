@@ -8,11 +8,11 @@ import (
 
 // Copyright (C) 2015 by Jason E. Aten, Ph.D.
 //
-// Initial HashTable implementation Inspired by the public domain C++ code of
+// Initial HashTable implementation inspired by the public domain C++ code of
 //    https://github.com/preshing/CompareIntegerMaps
 // See also
 //    http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/
-// for performance studies.
+// for performance studies of the c++ code.
 //
 
 //----------------------------------------------
@@ -89,6 +89,7 @@ type HashTable struct {
 	ZeroUsed   bool
 	ZeroCell   Cell
 	Offheap    []byte
+	Mmm        MmapMalloc
 }
 
 func NewHashTable(initialSize uint64) *HashTable {
@@ -96,10 +97,17 @@ func NewHashTable(initialSize uint64) *HashTable {
 	t := HashTable{
 		CellSz: uint64(unsafe.Sizeof(Cell{})),
 	}
-	// off-heap version
+
+	// off-heap and off-gc version
 	t.ArraySize = initialSize
-	t.Offheap = make([]byte, t.ArraySize*t.CellSz)
+	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz), "")
+	t.Offheap = t.Mmm.Mem
 	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
+
+	// off-gc but still on-heap version
+	//	t.ArraySize = initialSize
+	//	t.Offheap = make([]byte, t.ArraySize*t.CellSz)
+	//	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
 
 	// on-heap version: todo: allocate this off-heap instead.
 	//Cells:     make([]Cell, initialSize),
@@ -118,7 +126,7 @@ func (t *HashTable) CellAt(pos uint64) *Cell {
 }
 
 func (t *HashTable) DestroyHashTable() {
-	// todo: release the off-heap allocation here
+	t.Mmm.Free()
 }
 
 // Basic operations

@@ -8,6 +8,13 @@ import (
 	"github.com/glycerine/gommap"
 )
 
+// provide Malloc() and Free() calls which request memory directly
+// from the kernel via mmap(). Memory can optionally be backed
+// by a file for simplicity/efficiency of read/write.
+//
+// For use when the Go GC overhead is too large, and you need to move
+// the hash table off-heap.
+
 type MmapMalloc struct {
 	Path         string
 	File         *os.File
@@ -32,6 +39,8 @@ func (mm *MmapMalloc) TruncateTo(newSize int64) {
 
 //
 // offheap.Free()
+//
+// warning: any pointers still remaining will crash the program if dereferenced.
 //
 func (mm *MmapMalloc) Free() {
 	err := mm.MMap.UnsafeUnmap()
@@ -115,7 +124,7 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 
 	prot := syscall.PROT_READ | syscall.PROT_WRITE
 
-	fmt.Printf("\n ------->> path = '%v',  mm.Fd = %v, with flags = %x, sz = %v,  prot = '%v'\n", path, mm.Fd, flags, sz, prot)
+	VPrintf("\n ------->> path = '%v',  mm.Fd = %v, with flags = %x, sz = %v,  prot = '%v'\n", path, mm.Fd, flags, sz, prot)
 
 	var mmap []byte
 	var err error
