@@ -12,16 +12,29 @@ import (
 //    https://github.com/preshing/CompareIntegerMaps
 // See also
 //    http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/
-// for performance studies of the c++ code.
+// for performance studies of the C++ code.
+//
+// The purpose here is to have hash table that can work away
+// from Go's Garbage Collector, to avoid long GC pause times.
+//
+// We accomplish this by writing our own Malloc() and Free() implementation
+// (see malloc.go) which requests memory directly from the OS.
+// The keys, values, and entire hash table is kept on off-heap
+// storage. This storage can also optionally be backed by memory mapped file
+// for speedy persistence and fast startup times.
 //
 
 //----------------------------------------------
 //  HashTable
 //
-//  Maps pointer-sized integers to pointer-sized integers.
-//  Uses open addressing with linear probing.
-//  In the t.cells array, UnHashedKey = 0 is reserved to indicate an unused cell.
-//  Actual value for key 0 (if any) is stored in t.zeroCell.
+//  Maps pointer-sized integers to Cell structures, which in turn hold Val_t
+//   as well as key_t structures.
+//
+//  Uses open addressing with linear probing. This makes it very cache
+//   friendly and thus very fast.
+//
+//  In the t.Cells array, UnHashedKey = 0 is reserved to indicate an unused cell.
+//  Actual value for key 0 (if any) is stored in t.ZeroCell.
 //  The hash table automatically doubles in size when it becomes 75% full.
 //  The hash table never shrinks in size, even after Clear(), unless you explicitly
 //  call Compact().
@@ -121,7 +134,7 @@ func (t *HashTable) CellAt(pos uint64) *Cell {
 	// off heap version
 	return (*Cell)(unsafe.Pointer(uintptr(t.Cells) + uintptr(pos*t.CellSz)))
 
-	// on heap version
+	// on heap version, back when t.Cells was []Cell
 	//return &(t.Cells[pos])
 }
 
@@ -147,7 +160,6 @@ func (t *HashTable) Lookup(key uint64) *Cell {
 		h := integerHash(uint64(key)) % t.ArraySize
 
 		for {
-			//cell = &(t.Cells[h]) // *Cell cannot be indexed
 			cell = t.CellAt(h)
 			if cell.UnHashedKey == key {
 				return cell
@@ -243,7 +255,6 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 
 	} else {
 
-		//pos := uint64((uintptr(unsafe.Pointer(cell)) - uintptr(unsafe.Pointer(&t.Cells[0]))) / uintptr(unsafe.Sizeof(Cell{}))) // *Cell does not support indexing
 		pos := uint64((uintptr(unsafe.Pointer(cell)) - uintptr(unsafe.Pointer(t.Cells))) / uintptr(unsafe.Sizeof(Cell{})))
 
 		// Delete from regular Cells
@@ -251,7 +262,6 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 			panic(fmt.Sprintf("cell out of bounds: pos %v was < 0 or >= t.ArraySize == %v", pos, t.ArraySize))
 		}
 
-		//if t.Cells[pos].UnHashedKey == 0 { // *Cell cannot be indexed
 		if t.CellAt(pos).UnHashedKey == 0 {
 			panic("zero UnHashedKey in non-zero Cell!")
 		}
@@ -272,7 +282,7 @@ func (t *HashTable) DeleteCell(cell *Cell) {
 			if neighbor.UnHashedKey == 0 {
 				// There's nobody to swap with. Go ahead and clear this cell, then return
 				cellPos = t.CellAt(pos)
-				cellPos.UnHashedKey = 0 // *Cell cannot be indexed
+				cellPos.UnHashedKey = 0
 				cellPos.ZeroValue()
 				t.Population--
 				return
