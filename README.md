@@ -4,19 +4,19 @@ go-offheap-hashtable
 When GC pauses are long because you've got big hash tables in Go, you need an off-heap hash-table.
 
 
- The purpose here is to have hash table that can work away
+ The purpose here is to have a hash table that can work away
  from Go's Garbage Collector, to avoid long GC pause times.
 
  We accomplish this by writing our own Malloc() and Free() implementation
  (see malloc.go) which requests memory directly from the OS.
- The keys, values, and entire hash table is kept on off-heap
- storage. This storage can also optionally be backed by memory mapped file
+ The keys, the values, and the entire hash table itself is kept 
+ in this off-heap storage. This storage can also optionally be backed by memory mapped file
  for speedy persistence and fast startup times.
 
  See offheap.go for all the interesting code. Modify val_t to hold
  you values, and key_t to contain your keys. Current sample code
  for int64, []byte, and string keys are provided. For speed, 
- xxhash64 is used to produce uint64 hashes of strings and []byte.
+ [xxhash64](https://github.com/OneOfOne/xxhash) is used to produce uint64 hashes of strings and []byte.
 
  Note that all your key and values should be inline in the Cell. If you
  point back into the go-heap, such values maybe garbage collected by
