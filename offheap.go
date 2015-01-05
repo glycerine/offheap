@@ -11,7 +11,10 @@ import (
 // HashTable represents the off-heap hash table.
 // Create a new one with NewHashTable(), then use
 // Lookup(), Insert(), and DeleteKey() on it.
-// HashTable itself represents
+// HashTable is meant to be customized by the
+// user, to reflect your choice of key and value
+// types. See StringHashTable and ByteKeyHashTable
+// for examples of this specialization process.
 type HashTable struct {
 	Cells      uintptr    `capid:"0"`
 	CellSz     uint64     `capid:"1"`
