@@ -46,9 +46,9 @@ func NewHashTable(initialSize uint64) *HashTable {
 	return &t
 }
 
-// key_t is the basic type for keys. Users of the library will
+// Key_t is the basic type for keys. Users of the library will
 // probably redefine this.
-type key_t [64]byte
+type Key_t [64]byte
 
 // Val_t is the basic type for values stored in the cells in the table.
 // Users of the library will probably redefine this to be a different
@@ -58,7 +58,7 @@ type Val_t [56]byte
 // Cell is the basic payload struct, stored inline in the HashTable.
 type Cell struct {
 	UnHashedKey uint64 `capid:"0"`
-	ByteKey     key_t  `capid:"1"`
+	ByteKey     Key_t  `capid:"1"`
 	Value       Val_t  `capid:"2"` // customize this to hold your value's data type entirely here.
 }
 

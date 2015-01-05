@@ -7,3 +7,6 @@ clean:
 
 kv:
 	cd keyval; bambam -p="keyval" -o="." account.go && mv schema.capnp keyval.capnp && capnpc -ogo keyval.capnp
+
+doc:
+	godoc $$GOPATH/src/github.com/glycerine/go-offheap-hashtable

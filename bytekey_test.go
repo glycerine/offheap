@@ -9,7 +9,7 @@ import (
 
 func TestByteKeyInsertLookup(t *testing.T) {
 
-	h := offheap.NewHashTable(8)
+	h := offheap.NewByteKeyHashTable(8)
 
 	cv.Convey("inserting with a byte slice key using InsertBK should enable retrieving them with LookupBK", t, func() {
 		cv.So(h.Population, cv.ShouldEqual, 0)
@@ -31,7 +31,7 @@ func TestByteKeyInsertLookup(t *testing.T) {
 
 func TestStringKeyInsertLookup(t *testing.T) {
 
-	h := offheap.NewHashTable(8)
+	h := offheap.NewStringHashTable(8)
 
 	cv.Convey("inserting with a byte slice key using InsertBK should enable retrieving them with LookupBK", t, func() {
 		cv.So(h.Population, cv.ShouldEqual, 0)

@@ -27,7 +27,7 @@ func TestRandomStringOps(t *testing.T) {
 		nm[i].num = i
 	}
 
-	h := offheap.NewHashTable(2)
+	h := offheap.NewStringHashTable(2)
 
 	m := make(map[string]int)
 

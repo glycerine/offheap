@@ -20,8 +20,10 @@ for performance studies of the C++ code.
 
 HashTable
 
+The implementation is mostly in offheap.go, read that to start.
+
 Maps pointer-sized integers to Cell structures, which in turn hold Val_t
-as well as key_t structures.
+as well as Key_t structures.
 
 Uses open addressing with linear probing. This makes it very cache
 friendly and thus very fast.
@@ -52,7 +54,7 @@ Example use:
     val, ok := h.LookupStringKey("My number")
     h.DeleteStringKey("My number")
 
-Note that this library is only a starting point of source code, and not intended to be used without customization. Users of the HashTable will have to customize it by changing the definitions of key_t and Val_t to suite their needs. I'm experimenting next with storing objects in Capnproto serialized format, but this branch (branch capnp) isn't quite ready for use.
+Note that this library is only a starting point of source code, and not intended to be used without customization. Users of the HashTable will have to customize it by changing the definitions of Key_t and Val_t to suite their needs. I'm experimenting next with storing objects in Capnproto serialized format, but this branch (branch capnp) isn't quite ready for use.
 
 */
 package offheap

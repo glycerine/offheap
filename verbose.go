@@ -6,16 +6,16 @@ import (
 	"github.com/shurcooL/go-goon"
 )
 
-var Verbose bool
+var verbose bool
 
 func VPrintf(format string, a ...interface{}) {
-	if Verbose {
+	if verbose {
 		fmt.Printf(format, a...)
 	}
 }
 
 func VDump(i interface{}) {
-	if Verbose {
+	if verbose {
 		goon.Dump(i)
 	}
 }

@@ -8,13 +8,18 @@ import (
 	"github.com/glycerine/gommap"
 )
 
-// provide Malloc() and Free() calls which request memory directly
+// The MmapMalloc struct represents either an anonymous, private
+// region of memory (if path was "", or a memory mapped file if
+// path was supplied to Malloc() at creation.
+//
+// Malloc() creates and returns an MmapMalloc struct, which can then
+// be later Free()-ed. Malloc() calls request memory directly
 // from the kernel via mmap(). Memory can optionally be backed
 // by a file for simplicity/efficiency of saving to disk.
 //
 // For use when the Go GC overhead is too large, and you need to move
 // the hash table off-heap.
-
+//
 type MmapMalloc struct {
 	Path         string `capid:"0"`
 	File         *os.File
@@ -25,7 +30,9 @@ type MmapMalloc struct {
 	Mem          []byte      `capid:"4"` // equiv to Mmap
 }
 
-// only impacts the file underlying the mapping, not
+// TruncateTo enlarges or shortens the file backing the
+// memory map to be size newSize bytes. It only impacts
+// the file underlying the mapping, not
 // the mapping itself at this point.
 func (mm *MmapMalloc) TruncateTo(newSize int64) {
 	if mm.File == nil {
@@ -37,11 +44,10 @@ func (mm *MmapMalloc) TruncateTo(newSize int64) {
 	}
 }
 
-//
-// offheap.Free()
-//
-// warning: any pointers still remaining will crash the program if dereferenced.
-//
+// Free eleases the memory allocation back to the OS by removing
+// the (possibly anonymous and private) memroy mapped file that
+// was backing it. Warning: any pointers still remaining will crash
+// the program if dereferenced.
 func (mm *MmapMalloc) Free() {
 	if mm.File != nil {
 		mm.File.Close()
@@ -52,16 +58,13 @@ func (mm *MmapMalloc) Free() {
 	}
 }
 
+//Malloc() creates a new
 //
-//offheap.Malloc()
-//
-//If path is not empty then we memory map to the give path as well.
-//Otherwise it is just like a call to malloc(): an anonymous memory allocation, outside the realm
-//of the Go Garbage Collector.
-//
-//if numBytes is -1, then we take the size from the path file's size.
-//
-//The returned value's .Mem member holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
+// If path is not empty then we memory map to the give path as well.
+// Otherwise it is just like a call to malloc(): an anonymous memory allocation,
+// outside the realm of the Go Garbage Collector.
+// If numBytes is -1, then we take the size from the path file's size.
+// The returned value's .Mem member holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
 //
 func Malloc(numBytes int64, path string) *MmapMalloc {
 
@@ -80,11 +83,11 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 
 	} else {
 
-		if DirExists(mm.Path) {
+		if dirExists(mm.Path) {
 			panic(fmt.Sprintf("path '%s' already exists as a directory, so cannot be used as a memory mapped file.", mm.Path))
 		}
 
-		if !FileExists(mm.Path) {
+		if !fileExists(mm.Path) {
 			file, err := os.Create(mm.Path)
 			if err != nil {
 				panic(err)
