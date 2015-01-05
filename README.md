@@ -42,7 +42,7 @@ testing
     go test -v
 
 
-The implementation was test driven and includes 4528 correctness checks.
+The implementation was test driven and includes over 4500 correctness checks.
 
 Copyright (C) 2015 by Jason E. Aten, Ph.D.
 
