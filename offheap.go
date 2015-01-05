@@ -374,6 +374,8 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 	VPrintf("\n ---- Done with Repopulate, now s = \n")
 	VDump(s)
 
+	t.DestroyHashTable()
+
 	*t = *s
 }
 

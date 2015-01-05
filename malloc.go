@@ -10,7 +10,7 @@ import (
 
 // provide Malloc() and Free() calls which request memory directly
 // from the kernel via mmap(). Memory can optionally be backed
-// by a file for simplicity/efficiency of read/write.
+// by a file for simplicity/efficiency of saving to disk.
 //
 // For use when the Go GC overhead is too large, and you need to move
 // the hash table off-heap.
@@ -43,6 +43,9 @@ func (mm *MmapMalloc) TruncateTo(newSize int64) {
 // warning: any pointers still remaining will crash the program if dereferenced.
 //
 func (mm *MmapMalloc) Free() {
+	if mm.File != nil {
+		mm.File.Close()
+	}
 	err := mm.MMap.UnsafeUnmap()
 	if err != nil {
 		panic(err)
