@@ -9,8 +9,9 @@ import (
 // Copyright (C) 2015 by Jason E. Aten, Ph.D.
 
 // HashTable represents the off-heap hash table.
-// create a new one with NewHashTable(), then use
+// Create a new one with NewHashTable(), then use
 // Lookup(), Insert(), and DeleteKey() on it.
+// HashTable itself represents
 type HashTable struct {
 	Cells      uintptr    `capid:"0"`
 	CellSz     uint64     `capid:"1"`
@@ -60,7 +61,10 @@ type Val_t [56]byte
 // Value is where the value that corresponds to the key (in ByteKey)
 // is stored. Both the key (in ByteKey) and the value (in Value) are
 // stored inline inside the hashtable, so that all storage for
-// the hashtable is in the same offheap segment.
+// the hashtable is in the same offheap segment. The uint64 key given
+// to fundamental Insert() method is stored in UnHashedKey. The hashed value of the
+// UnHashedKey is not stored in the Cell, but rather computed as needed
+// by the basic Insert() and Lookup() methods.
 type Cell struct {
 	UnHashedKey uint64 `capid:"0"`
 	ByteKey     Key_t  `capid:"1"`
