@@ -5,7 +5,7 @@ import (
 	"os"
 	"syscall"
 
-	"launchpad.net/gommap"
+	"github.com/glycerine/gommap"
 )
 
 type MmapMalloc struct {
@@ -17,13 +17,6 @@ type MmapMalloc struct {
 	MMap         gommap.MMap // equiv to Mem
 	Mem          []byte      // equiv to Mmap
 }
-
-const MAP_ANONYMOUS = 0x20
-const MAP_PRIVATE = 0x2
-const MAP_SHARED = 0x1
-
-const PROT_READ = 0x1
-const PROT_WRITE = 0x2
 
 // only impacts the file underlying the mapping, not
 // the mapping itself at this point.
@@ -129,19 +122,21 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 	if mm.Fd == -1 {
 
 		flags = syscall.MAP_ANON | syscall.MAP_PRIVATE
-		mmap, err = syscall.Mmap(-1, 0, int(sz), prot, flags)
+		i1 := int64(-1)
+		m1 := uintptr(uint64(i1))
+		mmap, err = gommap.MapAt(0, m1, 0, int64(sz), gommap.ProtFlags(prot), gommap.MapFlags(flags))
+
+		// save for reference:
+		// the raw call also works, and doesn't need the i1/m1 conversion to work
+		// around the crappy uintptr-based interface of gommap:
+		// mmap, err = syscall.Mmap(-1, 0, int(sz), prot, flags)
+
 	} else {
 
 		flags = syscall.MAP_SHARED
 		mmap, err = syscall.Mmap(mm.Fd, 0, int(sz), prot, flags)
 	}
 	if err != nil {
-
-		var errno syscall.Errno
-		if err != nil {
-			errno = err.(syscall.Errno)
-		}
-		fmt.Printf("\n  mmap is '%#v', errno is '%v'\n", mmap, errno)
 		panic(err)
 	}
 
