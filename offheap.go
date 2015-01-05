@@ -28,7 +28,7 @@ import (
 //----------------------------------------------
 
 type key_t [64]byte
-type Val_t [64]byte
+type Val_t [56]byte
 
 type Cell struct {
 	UnHashedKey uint64
@@ -109,7 +109,7 @@ func NewHashTable(initialSize uint64) *HashTable {
 	//	t.Offheap = make([]byte, t.ArraySize*t.CellSz)
 	//	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
 
-	// on-heap version: todo: allocate this off-heap instead.
+	// on-heap version:
 	//Cells:     make([]Cell, initialSize),
 
 	return &t
@@ -381,12 +381,19 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 
 //----------------------------------------------
 //  Iterator
+//
+//  sample use: given a HashTable h, enumerate h's contents with:
+//
+//		for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
+//			found = append(found, it.Cur.UnHashedKey)
+//		}
+//
 //----------------------------------------------
 
 type Iterator struct {
 	Tab *HashTable
 	Pos int64
-	Cur *Cell // nil when done
+	Cur *Cell // will be set to nil when done with iteration.
 }
 
 func NewIterator(tab *HashTable) *Iterator {
@@ -407,6 +414,13 @@ func NewIterator(tab *HashTable) *Iterator {
 	}
 
 	return it
+}
+
+func (it *Iterator) Done() bool {
+	if it.Cur == nil {
+		return true
+	}
+	return false
 }
 
 func (it *Iterator) Next() *Cell {
