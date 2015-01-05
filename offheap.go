@@ -44,9 +44,9 @@ type key_t [64]byte
 type Val_t [56]byte
 
 type Cell struct {
-	UnHashedKey uint64
-	ByteKey     key_t
-	Value       Val_t // customize this to hold your value's data type entirely here.
+	UnHashedKey uint64 `capid:"0"`
+	ByteKey     key_t  `capid:"1"`
+	Value       Val_t  `capid:"2"` // customize this to hold your value's data type entirely here.
 }
 
 func (cell *Cell) SetValue(v interface{}) {
@@ -95,14 +95,14 @@ func (v *Val_t) GetString() string {
 }
 
 type HashTable struct {
-	Cells      uintptr
-	CellSz     uint64
-	ArraySize  uint64
-	Population uint64
-	ZeroUsed   bool
-	ZeroCell   Cell
-	Offheap    []byte
-	Mmm        MmapMalloc
+	Cells      uintptr    `capid:"0"`
+	CellSz     uint64     `capid:"1"`
+	ArraySize  uint64     `capid:"2"`
+	Population uint64     `capid:"3"`
+	ZeroUsed   bool       `capid:"4"`
+	ZeroCell   Cell       `capid:"5"`
+	Offheap    []byte     `capid:"6"`
+	Mmm        MmapMalloc `capid:"7"`
 }
 
 func NewHashTable(initialSize uint64) *HashTable {
@@ -401,9 +401,9 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 //----------------------------------------------
 
 type Iterator struct {
-	Tab *HashTable
-	Pos int64
-	Cur *Cell // will be set to nil when done with iteration.
+	Tab *HashTable `capid:"0"`
+	Pos int64      `capid:"1"`
+	Cur *Cell      `capid:"2"` // will be set to nil when done with iteration.
 }
 
 func NewIterator(tab *HashTable) *Iterator {

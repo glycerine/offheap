@@ -16,13 +16,13 @@ import (
 // the hash table off-heap.
 
 type MmapMalloc struct {
-	Path         string
+	Path         string `capid:"0"`
 	File         *os.File
-	Fd           int
-	FileBytesLen int64
-	BytesAlloc   int64
+	Fd           int         `capid:"1"`
+	FileBytesLen int64       `capid:"2"`
+	BytesAlloc   int64       `capid:"3"`
 	MMap         gommap.MMap // equiv to Mem
-	Mem          []byte      // equiv to Mmap
+	Mem          []byte      `capid:"4"` // equiv to Mmap
 }
 
 // only impacts the file underlying the mapping, not
