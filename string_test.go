@@ -32,25 +32,25 @@ func TestRandomStringOps(t *testing.T) {
 	m := make(map[string]int)
 
 	cv.Convey("given a sequence of random operations, the result should match what Go's builtin map does", t, func() {
-		cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		// basic insert
 		m[nm[0].name] = nm[0].num
 		h.InsertStringKey(nm[0].name, nm[0].num)
-		cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		m[nm[1].name] = nm[1].num
 		h.InsertStringKey(nm[1].name, nm[1].num)
-		cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		// basic delete
 		delete(m, nm[0].name)
 		h.DeleteStringKey(nm[0].name)
-		cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		delete(m, nm[1].name)
 		h.DeleteStringKey(nm[1].name)
-		cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		// now do random operations
 		N := 1000
@@ -67,12 +67,12 @@ func TestRandomStringOps(t *testing.T) {
 			case 0, 1, 2:
 				m[nm[w].name] = nm[w].num
 				h.InsertStringKey(nm[w].name, nm[w].num)
-				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+				cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
 			case 3:
 				delete(m, nm[w].name)
 				h.DeleteStringKey(nm[w].name)
-				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+				cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 			}
 		}
 
@@ -90,12 +90,12 @@ func TestRandomStringOps(t *testing.T) {
 			case 0:
 				m[nm[w].name] = nm[w].num
 				h.InsertStringKey(nm[w].name, nm[w].num)
-				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+				cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 
 			case 1:
 				delete(m, nm[w].name)
 				h.DeleteStringKey(nm[w].name)
-				cv.So(offheap.StringHashEqualsMap(h, m), cv.ShouldEqual, true)
+				cv.So(stringHashEqualsMap(h, m), cv.ShouldEqual, true)
 			}
 		}
 

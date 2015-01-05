@@ -17,25 +17,25 @@ func TestRandomOperationsOrder(t *testing.T) {
 	m := make(map[uint64]int)
 
 	cv.Convey("given a sequence of random operations, the result should match what Go's builtin map does", t, func() {
-		cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		// basic insert
 		m[1] = 2
 		h.InsertIntValue(1, 2)
-		cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		m[3] = 4
 		h.InsertIntValue(3, 4)
-		cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		// basic delete
 		delete(m, 1)
 		h.DeleteKey(1)
-		cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		delete(m, 3)
 		h.DeleteKey(3)
-		cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+		cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 
 		// now do random operations
 		N := 1000
@@ -53,11 +53,11 @@ func TestRandomOperationsOrder(t *testing.T) {
 			case 0, 1, 2:
 				h.InsertIntValue(k, v)
 				m[k] = v
-				cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+				cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 			case 3:
 				h.DeleteKey(uint64(k))
 				delete(m, k)
-				cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+				cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 
 			}
 		}
@@ -74,11 +74,11 @@ func TestRandomOperationsOrder(t *testing.T) {
 			case 0:
 				h.InsertIntValue(k, v)
 				m[k] = v
-				cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+				cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 			case 1:
 				h.DeleteKey(uint64(k))
 				delete(m, k)
-				cv.So(offheap.HashEqualsMap(h, m), cv.ShouldEqual, true)
+				cv.So(hashEqualsMap(h, m), cv.ShouldEqual, true)
 
 			}
 		}
