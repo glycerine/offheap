@@ -3,9 +3,8 @@ package keyval
 // AUTO GENERATED - DO NOT EDIT
 
 import (
-	"unsafe"
-
 	C "github.com/glycerine/go-capnproto"
+	"unsafe"
 )
 
 type AccountCapn C.Struct

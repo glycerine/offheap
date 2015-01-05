@@ -1,5 +1,11 @@
 package keyval
 
+// key
+type AcctId struct {
+	AcctId string `json:"AcctId" capid:"0"`
+}
+
+// value
 type Account struct {
 	Id               int64  `protobuf:"varint,1,opt,name=id" json:"id" capid:"0"`
 	Dty              int64  `protobuf:"varint,2,opt,name=dty" json:"dty" capid:"1"`
