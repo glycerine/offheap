@@ -7,7 +7,9 @@ import (
 )
 
 // ByteKeyHashTable shows how to specialize HashTable to
-// handle the []byte type as a key.
+// handle the []byte type as a key.  At present, given the current
+// definition of Key_t (you should redefine Key_t if needed -- see offheap.go),
+// only the first 64 bytes are used in the hash of the key.
 type ByteKeyHashTable HashTable
 
 // xxHasher64 provides hashing for the byte-key (BK) interface to the hash table
@@ -82,7 +84,9 @@ func (t *ByteKeyHashTable) DeleteBK(bytekey []byte) bool {
 }
 
 // StringHashTable shows how to specialize HashTable to
-// handle strings as keys.
+// handle strings as keys. At present, given the current
+// definition of Key_t (you should redefine Key_t if needed -- see offheap.go),
+// only the first 64 bytes are used in the hash of the key.
 type StringHashTable HashTable
 
 // NewStringHashTable produces a new StringHashTable, one specialized for
