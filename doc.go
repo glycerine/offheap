@@ -52,5 +52,7 @@ Example use:
     val, ok := h.LookupStringKey("My number")
     h.DeleteStringKey("My number")
 
+Note that this library is only a starting point of source code, and not intended to be used without customization. Users of the HashTable will have to customize it by changing the definitions of key_t and Val_t to suite their needs. I'm experimenting next with storing objects in Capnproto serialized format, but this branch (branch capnp) isn't quite ready for use.
+
 */
 package offheap
