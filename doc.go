@@ -1,5 +1,9 @@
 /*
- go-offheap-hashtable
+offheap
+=======
+
+An off-heap hash-table for Go (golang). Originally called go-offheap-hashtable,
+but now shortened to just offheap.
 
 The purpose here is to have hash table that can work away
 from Go's Garbage Collector, to avoid long GC pause times.

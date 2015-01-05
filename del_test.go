@@ -3,7 +3,7 @@ package offheap_test
 import (
 	"testing"
 
-	"github.com/glycerine/go-offheap-hashtable"
+	"github.com/glycerine/offheap"
 	cv "github.com/smartystreets/goconvey/convey"
 )
 

@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/glycerine/go-offheap-hashtable"
+	"github.com/glycerine/offheap"
 )
 
 // compare for correctness checking
