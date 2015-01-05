@@ -3,8 +3,9 @@ package offheap
 // AUTO GENERATED - DO NOT EDIT
 
 import (
-	C "github.com/glycerine/go-capnproto"
 	"unsafe"
+
+	C "github.com/glycerine/go-capnproto"
 )
 
 type CellCapn C.Struct
@@ -20,7 +21,6 @@ func (s CellCapn) SetByteKey(v []byte)       { C.Struct(s).SetObject(0, s.Segmen
 func (s CellCapn) Value() []byte             { return C.Struct(s).GetObject(1).ToData() }
 func (s CellCapn) SetValue(v []byte)         { C.Struct(s).SetObject(1, s.Segment.NewData(v)) }
 
-// capn.JSON_enabled == false so we stub MarshallJSON().
 func (s CellCapn) MarshalJSON() (bs []byte, err error) { return }
 
 type CellCapn_List C.PointerList
@@ -60,7 +60,6 @@ func (s HashTableCapn) Mmm() MmapMallocCapn {
 }
 func (s HashTableCapn) SetMmm(v MmapMallocCapn) { C.Struct(s).SetObject(2, C.Object(v)) }
 
-// capn.JSON_enabled == false so we stub MarshallJSON().
 func (s HashTableCapn) MarshalJSON() (bs []byte, err error) { return }
 
 type HashTableCapn_List C.PointerList
@@ -90,7 +89,6 @@ func (s IteratorCapn) SetPos(v int64)                { C.Struct(s).Set64(0, uint
 func (s IteratorCapn) Cur() CellCapn                 { return CellCapn(C.Struct(s).GetObject(1).ToStruct()) }
 func (s IteratorCapn) SetCur(v CellCapn)             { C.Struct(s).SetObject(1, C.Object(v)) }
 
-// capn.JSON_enabled == false so we stub MarshallJSON().
 func (s IteratorCapn) MarshalJSON() (bs []byte, err error) { return }
 
 type IteratorCapn_List C.PointerList
@@ -124,7 +122,6 @@ func (s MmapMallocCapn) SetBytesAlloc(v int64)           { C.Struct(s).Set64(16,
 func (s MmapMallocCapn) Mem() []byte                     { return C.Struct(s).GetObject(1).ToData() }
 func (s MmapMallocCapn) SetMem(v []byte)                 { C.Struct(s).SetObject(1, s.Segment.NewData(v)) }
 
-// capn.JSON_enabled == false so we stub MarshallJSON().
 func (s MmapMallocCapn) MarshalJSON() (bs []byte, err error) { return }
 
 type MmapMallocCapn_List C.PointerList
