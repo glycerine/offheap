@@ -402,13 +402,13 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 }
 
 /*
-  Iterator
+Iterator
 
-  sample use: given a HashTable h, enumerate h's contents with:
+sample use: given a HashTable h, enumerate h's contents with:
 
-  for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
-    found = append(found, it.Cur.UnHashedKey)
-  }
+    for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
+      found = append(found, it.Cur.UnHashedKey)
+    }
 */
 type Iterator struct {
 	Tab *HashTable `capid:"0"`
