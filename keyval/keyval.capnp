@@ -1,10 +1,9 @@
-@0xb2ce27958b10688c;
+@0xb5ad603901f0b77d;
 using Go = import "go.capnp";
-$Go.package("keyval");
+$Go.package("main");
 $Go.import("testpkg");
 
 
-# the value payload
 struct AccountCapn { 
    id            @0:   Int64; 
    dty           @1:   Int64; 
@@ -14,3 +13,14 @@ struct AccountCapn {
    email         @5:   Text; 
    disabled      @6:   Int64; 
 } 
+
+struct AcctIdCapn { 
+   acctId  @0:   Text; 
+} 
+
+##compile with:
+
+##
+##
+##   capnp compile -ogo odir/schema.capnp
+

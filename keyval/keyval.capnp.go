@@ -3,8 +3,9 @@ package keyval
 // AUTO GENERATED - DO NOT EDIT
 
 import (
-	C "github.com/glycerine/go-capnproto"
 	"unsafe"
+
+	C "github.com/glycerine/go-capnproto"
 )
 
 type AccountCapn C.Struct
@@ -42,3 +43,27 @@ func (s AccountCapn_List) ToArray() []AccountCapn {
 	return *(*[]AccountCapn)(unsafe.Pointer(C.PointerList(s).ToArray()))
 }
 func (s AccountCapn_List) Set(i int, item AccountCapn) { C.PointerList(s).Set(i, C.Object(item)) }
+
+type AcctIdCapn C.Struct
+
+func NewAcctIdCapn(s *C.Segment) AcctIdCapn      { return AcctIdCapn(s.NewStruct(0, 1)) }
+func NewRootAcctIdCapn(s *C.Segment) AcctIdCapn  { return AcctIdCapn(s.NewRootStruct(0, 1)) }
+func AutoNewAcctIdCapn(s *C.Segment) AcctIdCapn  { return AcctIdCapn(s.NewStructAR(0, 1)) }
+func ReadRootAcctIdCapn(s *C.Segment) AcctIdCapn { return AcctIdCapn(s.Root(0).ToStruct()) }
+func (s AcctIdCapn) AcctId() string              { return C.Struct(s).GetObject(0).ToText() }
+func (s AcctIdCapn) SetAcctId(v string)          { C.Struct(s).SetObject(0, s.Segment.NewText(v)) }
+
+// capn.JSON_enabled == false so we stub MarshallJSON().
+func (s AcctIdCapn) MarshalJSON() (bs []byte, err error) { return }
+
+type AcctIdCapn_List C.PointerList
+
+func NewAcctIdCapnList(s *C.Segment, sz int) AcctIdCapn_List {
+	return AcctIdCapn_List(s.NewCompositeList(0, 1, sz))
+}
+func (s AcctIdCapn_List) Len() int            { return C.PointerList(s).Len() }
+func (s AcctIdCapn_List) At(i int) AcctIdCapn { return AcctIdCapn(C.PointerList(s).At(i).ToStruct()) }
+func (s AcctIdCapn_List) ToArray() []AcctIdCapn {
+	return *(*[]AcctIdCapn)(unsafe.Pointer(C.PointerList(s).ToArray()))
+}
+func (s AcctIdCapn_List) Set(i int, item AcctIdCapn) { C.PointerList(s).Set(i, C.Object(item)) }
