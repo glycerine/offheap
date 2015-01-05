@@ -1,6 +1,6 @@
-@0xb5ad603901f0b77d;
+@0x887a749f8d712028;
 using Go = import "go.capnp";
-$Go.package("main");
+$Go.package("keyval");
 $Go.import("testpkg");
 
 
@@ -22,5 +22,5 @@ struct AcctIdCapn {
 
 ##
 ##
-##   capnp compile -ogo odir/schema.capnp
+##   capnp compile -ogo ./schema.capnp
 
