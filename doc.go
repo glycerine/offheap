@@ -1,6 +1,7 @@
 /*
-offheap
 
+
+Offheap
 
 An off-heap hash-table for Go (golang). Originally called go-offheap-hashtable,
 but now shortened to just offheap.
