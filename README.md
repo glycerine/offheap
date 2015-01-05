@@ -15,11 +15,11 @@ When GC pauses are long because you've got big hash tables in Go, you need an of
 
  Initial HashTable implementation inspired by the public domain C++ code of
 
-    https://github.com/preshing/CompareIntegerMaps
+ [https://github.com/preshing/CompareIntegerMaps](https://github.com/preshing/CompareIntegerMaps)
 
  See also
 
-    http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/
+ [http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/](http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array/)
 
  for performance studies of the C++ code.
 
