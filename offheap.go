@@ -431,7 +431,7 @@ type Iterator struct {
 }
 
 // NewIterator creates a new iterator for HashTable tab.
-func NewIterator(tab *HashTable) *Iterator {
+func (tab *HashTable) NewIterator() *Iterator {
 	it := &Iterator{
 		Tab: tab,
 		Cur: &tab.ZeroCell,

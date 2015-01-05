@@ -17,14 +17,14 @@ func TestIterator(t *testing.T) {
 			cv.So(ok, cv.ShouldEqual, true)
 			if i == 0 {
 				// iterator should start with the zero value
-				it := offheap.NewIterator(h)
+				it := h.NewIterator()
 				cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 0)
 			}
 		}
 		cv.So(h.Population, cv.ShouldEqual, 3)
 
 		found := []uint64{}
-		for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
+		for it := h.NewIterator(); it.Cur != nil; it.Next() {
 			found = append(found, it.Cur.UnHashedKey)
 		}
 		cv.So(len(found), cv.ShouldEqual, 3)
@@ -41,14 +41,14 @@ func TestIterator(t *testing.T) {
 			cv.So(ok, cv.ShouldEqual, true)
 			if i == 0 {
 				// iterator should not start with the zero value, not inserted.
-				it := offheap.NewIterator(h)
+				it := h.NewIterator()
 				cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 1)
 			}
 		}
 		cv.So(h.Population, cv.ShouldEqual, 3)
 
 		found := []uint64{}
-		for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
+		for it := h.NewIterator(); it.Cur != nil; it.Next() {
 			found = append(found, it.Cur.UnHashedKey)
 		}
 		cv.So(len(found), cv.ShouldEqual, 3)
@@ -65,7 +65,7 @@ func TestIterator(t *testing.T) {
 			cv.So(ok, cv.ShouldEqual, true)
 			if i == 0 {
 				// iterator should start with the zero value
-				it := offheap.NewIterator(h)
+				it := h.NewIterator()
 				cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 0)
 			}
 		}
@@ -73,7 +73,7 @@ func TestIterator(t *testing.T) {
 		cv.So(h.CellAt(0).UnHashedKey, cv.ShouldEqual, 1) // important for this test that the regular 0-th (first) cell slot be occupied.
 
 		found := []uint64{}
-		for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
+		for it := h.NewIterator(); it.Cur != nil; it.Next() {
 			found = append(found, it.Cur.UnHashedKey)
 		}
 		cv.So(len(found), cv.ShouldEqual, 2)
@@ -89,7 +89,7 @@ func TestIterator(t *testing.T) {
 			cv.So(ok, cv.ShouldEqual, true)
 			if i == 0 {
 				// iterator should start with the zero value
-				it := offheap.NewIterator(h)
+				it := h.NewIterator()
 				cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 0)
 				cv.So(it.Pos, cv.ShouldEqual, -1)
 			}
@@ -98,7 +98,7 @@ func TestIterator(t *testing.T) {
 		cv.So(h.CellAt(0).UnHashedKey, cv.ShouldEqual, 0) // important for this test that the regular 0-th (first) cell slot be *empty*.
 
 		found := []uint64{}
-		for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
+		for it := h.NewIterator(); it.Cur != nil; it.Next() {
 			found = append(found, it.Cur.UnHashedKey)
 		}
 		cv.So(len(found), cv.ShouldEqual, 2)
@@ -115,7 +115,7 @@ func TestIterator(t *testing.T) {
 		cv.So(ok, cv.ShouldEqual, true)
 
 		// iterator should start with the zero value
-		it := offheap.NewIterator(h)
+		it := h.NewIterator()
 		cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 1)
 		cv.So(it.Pos, cv.ShouldEqual, 0)
 
@@ -123,7 +123,7 @@ func TestIterator(t *testing.T) {
 		cv.So(h.CellAt(0).UnHashedKey, cv.ShouldEqual, 1) // important for this test that the regular 0-th (first) cell slot be *filled*.
 
 		found := []uint64{}
-		for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
+		for it := h.NewIterator(); it.Cur != nil; it.Next() {
 			found = append(found, it.Cur.UnHashedKey)
 		}
 		cv.So(len(found), cv.ShouldEqual, 1)
@@ -135,7 +135,7 @@ func TestIterator(t *testing.T) {
 		cv.So(h.Population, cv.ShouldEqual, 0)
 
 		found := []uint64{}
-		for it := offheap.NewIterator(h); it.Cur != nil; it.Next() {
+		for it := h.NewIterator(); it.Cur != nil; it.Next() {
 			found = append(found, it.Cur.UnHashedKey)
 		}
 		cv.So(len(found), cv.ShouldEqual, 0)
