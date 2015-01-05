@@ -61,9 +61,7 @@ func (mm *MmapMalloc) Free() {
 //
 //if numBytes is -1, then we take the size from the path file's size.
 //
-//return value
-//
-//.Mem holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
+//The returned value's .Mem member holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
 //
 func Malloc(numBytes int64, path string) *MmapMalloc {
 
