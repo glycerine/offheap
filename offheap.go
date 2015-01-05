@@ -46,7 +46,7 @@ type Val_t [56]byte
 type Cell struct {
 	UnHashedKey uint64
 	ByteKey     key_t
-	Value       Val_t
+	Value       Val_t // customize this to hold your value's data type entirely here.
 }
 
 func (cell *Cell) SetValue(v interface{}) {

@@ -13,6 +13,15 @@ When GC pauses are long because you've got big hash tables in Go, you need an of
  storage. This storage can also optionally be backed by memory mapped file
  for speedy persistence and fast startup times.
 
+ See offheap.go for all the interesting code. Modify val_t to hold
+ you values, and key_t to contain your keys. Current sample code
+ for int64, []byte, and string keys are provided. For speed, 
+ xxhash64 is used to produce uint64 hashes of strings and []byte.
+
+ Note that all your key and values should be inline in the Cell. If you
+ point back into the go-heap, such values maybe garbage collected by
+ the Go runtime without notice.
+
  Initial HashTable implementation inspired by the public domain C++ code of
 
  [https://github.com/preshing/CompareIntegerMaps](https://github.com/preshing/CompareIntegerMaps)
