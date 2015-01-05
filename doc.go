@@ -46,12 +46,12 @@
 
  Example use:
 
-	h := offheap.NewHashTable(2)
+ h := offheap.NewHashTable(2)
 
-		// basic three operations are:
-		h.InsertStringKey("My number", 43)
-      val, ok := h.LookupStringKey("My number")
-		h.DeleteStringKey("My number")
+ // basic three operations are:
+ h.InsertStringKey("My number", 43)
+ val, ok := h.LookupStringKey("My number")
+ h.DeleteStringKey("My number")
 
 */
 package offheap
