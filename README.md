@@ -14,8 +14,8 @@ When GC pauses are long because you've got big hash tables in Go, you need an of
 
  See offheap.go for all the interesting code. Modify val_t to hold
  you values, and key_t to contain your keys. Current sample code
- for int64, []byte, and string keys are provided. For speed, 
- [xxhash64](https://github.com/OneOfOne/xxhash) is used to produce uint64 hashes of strings and []byte.
+ for three types of keys (int64, []byte, and strings) is provided (see bytekey.go). 
+ For the hashing function itself, the incredibly fast [xxhash64](https://github.com/OneOfOne/xxhash) is used to produce uint64 hashes of strings and []byte.
 
  Note that all your key and values should be inline in the Cell. If you
  point back into the go-heap, such values maybe garbage collected by
