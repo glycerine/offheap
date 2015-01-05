@@ -31,6 +31,11 @@ When GC pauses are long because you've got big hash tables in Go, you need an of
 
  for performance studies of the C++ code.
 
+installation
+------------
+
+     go get -t github.com/glycerine/go-offheap-hashtable
+
 
 Copyright (C) 2015 by Jason E. Aten, Ph.D.
 
