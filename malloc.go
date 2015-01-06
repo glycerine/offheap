@@ -66,7 +66,10 @@ func (mm *MmapMalloc) Free() {
 // Otherwise it is just like a call to malloc(): an anonymous memory allocation,
 // outside the realm of the Go Garbage Collector.
 // If numBytes is -1, then we take the size from the path file's size. Otherwise
-// the file is expanded or truncated to be numBytes in size.
+// the file is expanded or truncated to be numBytes in size. If numBytes is -1
+// then a path must be provided; otherwise we have no way of knowing the size
+// to allocate, and the function will panic.
+//
 // The returned value's .Mem member holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
 //
 func Malloc(numBytes int64, path string) *MmapMalloc {
