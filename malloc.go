@@ -26,7 +26,7 @@ type MmapMalloc struct {
 	Fd           int         `capid:"1"`
 	FileBytesLen int64       `capid:"2"`
 	BytesAlloc   int64       `capid:"3"`
-	MMap         gommap.MMap // equiv to Mem
+	MMap         gommap.MMap // equiv to Mem, just avoids casts everywhere.
 	Mem          []byte      `capid:"4"` // equiv to Mmap
 }
 
@@ -142,14 +142,7 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 	if mm.Fd == -1 {
 
 		flags = syscall.MAP_ANON | syscall.MAP_PRIVATE
-		i1 := int64(-1)
-		m1 := uintptr(uint64(i1))
-		mmap, err = gommap.MapAt(0, m1, 0, int64(sz), gommap.ProtFlags(prot), gommap.MapFlags(flags))
-
-		// save for reference:
-		// the raw call also works, and doesn't need the i1/m1 conversion to work
-		// around the crappy uintptr-based interface of gommap:
-		// mmap, err = syscall.Mmap(-1, 0, int(sz), prot, flags)
+		mmap, err = syscall.Mmap(-1, 0, int(sz), prot, flags)
 
 	} else {
 
@@ -160,18 +153,23 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 		panic(err)
 	}
 
+	// duplicate member to avoid casts all over the place.
 	mm.MMap = mmap
 	mm.Mem = mmap
 
 	return &mm
 }
 
-// returns once sync-to-disk is done
+// BlockUntilSync() returns only once the file is synced to disk.
 func (mm *MmapMalloc) BlockUntilSync() {
 	mm.MMap.Sync(gommap.MS_SYNC)
 }
 
-// schedules sync, but may return before it is done.
+// BackgroundSync() schedules a sync to disk, but may return before it is done.
+// Without a call to either BackgroundSync() or BackgroundSync(), there
+// is no guarantee that file has ever been written to disk at any point before
+// the munmap() call that happens during Free(). See the man pages msync(2)
+// and mmap(2) for details.
 func (mm *MmapMalloc) BackgrounSync() {
 	mm.MMap.Sync(gommap.MS_ASYNC)
 }
