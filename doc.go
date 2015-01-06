@@ -63,7 +63,7 @@ Note that this library is only a starting point of source code, and not intended
 
 Related ideas:
 
-https://gist.github.com/mish15/9822474
+https://gist.github.com/mish15/9822474 (using CGO)
 
 https://groups.google.com/forum/#!topic/golang-nuts/kCQP6S6ZGh0
 
