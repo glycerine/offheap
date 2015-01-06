@@ -58,12 +58,15 @@ func (mm *MmapMalloc) Free() {
 	}
 }
 
-//Malloc() creates a new
+// Malloc() creates a new memory region that is provided directly
+// by OS via the mmap() call, and is thus not scanned by the Go
+// garbage collector.
 //
-// If path is not empty then we memory map to the give path as well.
+// If path is not empty then we memory map to the given path.
 // Otherwise it is just like a call to malloc(): an anonymous memory allocation,
 // outside the realm of the Go Garbage Collector.
-// If numBytes is -1, then we take the size from the path file's size.
+// If numBytes is -1, then we take the size from the path file's size. Otherwise
+// the file is expanded or truncated to be numBytes in size.
 // The returned value's .Mem member holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
 //
 func Malloc(numBytes int64, path string) *MmapMalloc {
