@@ -166,7 +166,7 @@ func (mm *MmapMalloc) BlockUntilSync() {
 }
 
 // BackgroundSync() schedules a sync to disk, but may return before it is done.
-// Without a call to either BackgroundSync() or BackgroundSync(), there
+// Without a call to either BackgroundSync() or BlockUntilSync(), there
 // is no guarantee that file has ever been written to disk at any point before
 // the munmap() call that happens during Free(). See the man pages msync(2)
 // and mmap(2) for details.

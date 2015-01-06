@@ -6,7 +6,7 @@ Offheap
 An off-heap hash-table for Go (golang). Originally called go-offheap-hashtable,
 but now shortened to just offheap.
 
-The purpose here is to have hash table that can work away
+The purpose here is to have a hash table that can work away
 from Go's Garbage Collector, to avoid long GC pause times.
 
 We accomplish this by writing our own Malloc() and Free() implementation
