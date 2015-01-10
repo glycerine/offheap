@@ -3,6 +3,7 @@ package offheap_test
 import (
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/glycerine/offheap"
@@ -12,7 +13,12 @@ import (
 func TestSaveRestore(t *testing.T) {
 
 	fn := "save_test_hash.ohdat"
-	os.Remove(fn)
+	err := os.Remove(fn)
+	if err != nil && !strings.HasSuffix(err.Error(), "no such file or directory") {
+		panic(err)
+	}
+	defer os.Remove(fn)
+
 	h := offheap.NewHashFileBacked(8, fn)
 
 	cv.Convey("saving and then loading a table should restore the contents from disk", t, func() {
@@ -37,10 +43,15 @@ func TestSaveRestore(t *testing.T) {
 
 		// copy to a new file to be sure everything is there, then mmap the new file
 		fncopy := fn + ".copy"
-		err := exec.Command("/bin/cp", "-p", fn, fncopy).Run()
+		err := os.Remove(fncopy)
+		if err != nil && !strings.HasSuffix(err.Error(), "no such file or directory") {
+			panic(err)
+		}
+		err = exec.Command("/bin/cp", "-p", fn, fncopy).Run()
 		if err != nil {
 			panic(err)
 		}
+		defer os.Remove(fncopy)
 
 		h2 := offheap.NewHashFileBacked(8, fncopy)
 
