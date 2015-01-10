@@ -28,6 +28,10 @@ type HashTable struct {
 
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTable(initialSize uint64) *HashTable {
+	return NewHashFileBacked(initialSize, "")
+}
+
+func NewHashFileBacked(initialSize uint64, filepath string) *HashTable {
 
 	t := HashTable{
 		CellSz: uint64(unsafe.Sizeof(Cell{})),
@@ -35,7 +39,7 @@ func NewHashTable(initialSize uint64) *HashTable {
 
 	// off-heap and off-gc version
 	t.ArraySize = initialSize
-	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz), "")
+	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz), filepath)
 	t.Offheap = t.Mmm.Mem
 	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
 
@@ -136,6 +140,11 @@ func (v *Val_t) SetString(s string) {
 // GetString retreives a string value for Val_t v.
 func (v *Val_t) GetString() string {
 	return string([]byte((*v)[:]))
+}
+
+// Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
+func (t *HashTable) Save() {
+	t.Mmm.BlockUntilSync()
 }
 
 // CellAt: fetch the cell at a given index. E.g. t.CellAt(pos) replaces t.Cells[pos]
