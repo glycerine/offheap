@@ -1,15 +1,6 @@
 package offheap_test
 
-import (
-	"os"
-	"os/exec"
-	"strings"
-	"testing"
-
-	"github.com/glycerine/offheap"
-	cv "github.com/smartystreets/goconvey/convey"
-)
-
+/*
 func TestSaveRestore(t *testing.T) {
 
 	fn := "save_test_hash.ohdat"
@@ -63,3 +54,4 @@ func TestSaveRestore(t *testing.T) {
 
 	})
 }
+*/

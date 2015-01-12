@@ -1,5 +1,8 @@
 package offheap
 
+// #include <strings.h>
+// #include <stdlib.h>
+import "C"
 import (
 	"encoding/binary"
 	"fmt"
@@ -16,14 +19,14 @@ import (
 // types. See StringHashTable and ByteKeyHashTable
 // for examples of this specialization process.
 type HashTable struct {
-	Cells      uintptr    `capid:"0"`
-	CellSz     uint64     `capid:"1"`
-	ArraySize  uint64     `capid:"2"`
-	Population uint64     `capid:"3"`
-	ZeroUsed   bool       `capid:"4"`
-	ZeroCell   Cell       `capid:"5"`
-	Offheap    []byte     `capid:"6"`
-	Mmm        MmapMalloc `capid:"7"`
+	Cells        uintptr `capid:"0"`
+	CellSz       uint64  `capid:"1"`
+	ArraySize    uint64  `capid:"2"`
+	Population   uint64  `capid:"3"`
+	ZeroUsed     bool    `capid:"4"`
+	ZeroCell     Cell    `capid:"5"`
+	Offheap      unsafe.Pointer
+	OffheapBytes uint64
 }
 
 // Create a new hash table, able to hold initialSize count of keys.
@@ -39,9 +42,10 @@ func NewHashFileBacked(initialSize uint64, filepath string) *HashTable {
 
 	// off-heap and off-gc version
 	t.ArraySize = initialSize
-	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz), filepath)
-	t.Offheap = t.Mmm.Mem
-	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
+	//	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz), filepath)
+	t.OffheapBytes = t.ArraySize * t.CellSz
+	t.Offheap = C.calloc(1, C.size_t(t.OffheapBytes))
+	t.Cells = (uintptr)(t.Offheap)
 
 	// off-gc but still on-heap version
 	//	t.ArraySize = initialSize
@@ -144,7 +148,7 @@ func (v *Val_t) GetString() string {
 
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
 func (t *HashTable) Save() {
-	t.Mmm.BlockUntilSync()
+	//t.Mmm.BlockUntilSync()
 }
 
 // CellAt: fetch the cell at a given index. E.g. t.CellAt(pos) replaces t.Cells[pos]
@@ -164,7 +168,7 @@ func (t *HashTable) CellAt(pos uint64) *Cell {
 // Deferencing any cells/pointers into the hash table after
 // destruction will result in crashing your process, almost surely.
 func (t *HashTable) DestroyHashTable() {
-	t.Mmm.Free()
+	C.free(t.Offheap)
 }
 
 // Lookup a cell based on a uint64 key value. Returns nil if key not found.
@@ -354,9 +358,7 @@ func (t *HashTable) Clear() {
 	// (Does not resize the array)
 	// Clear regular Cells
 
-	for i := range t.Offheap {
-		t.Offheap[i] = 0
-	}
+	C.bzero(t.Offheap, C.size_t(t.OffheapBytes))
 	t.Population = 0
 
 	// Clear zero cell

@@ -22,7 +22,7 @@ func TestCompact(t *testing.T) {
 
 }
 
-func TestCompatAfterDelete(t *testing.T) {
+func TestCompactAfterDelete(t *testing.T) {
 
 	h := offheap.NewHashTable(2)
 
