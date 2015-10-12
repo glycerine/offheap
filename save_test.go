@@ -94,5 +94,11 @@ func TestMetaSaveRestoreMetadataInMsgpack(t *testing.T) {
 		cv.So(t2, cv.ShouldResemble, t1)
 		fmt.Printf("\n len(bts) = %d\n", len(bts))
 
+		// if we ever get bigger than this, there will be problems as the
+		// metadata will overflow into the Cell data area on serialization.
+		// This is not a perfect
+		// test since msgpack serialization sizes vary depending on content. Hence we
+		// give our selves an extra 256 byte buffer.
+		cv.So(len(bts), cv.ShouldBeLessThan, offheap.MetadataHeaderMaxBytes-256)
 	})
 }
