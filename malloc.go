@@ -21,13 +21,13 @@ import (
 // the hash table off-heap.
 //
 type MmapMalloc struct {
-	Path         string `capid:"0"`
+	Path         string
 	File         *os.File
-	Fd           int         `capid:"1"`
-	FileBytesLen int64       `capid:"2"`
-	BytesAlloc   int64       `capid:"3"`
+	Fd           int
+	FileBytesLen int64
+	BytesAlloc   int64
 	MMap         gommap.MMap // equiv to Mem, just avoids casts everywhere.
-	Mem          []byte      `capid:"4"` // equiv to Mmap
+	Mem          []byte      // equiv to Mmap
 }
 
 // TruncateTo enlarges or shortens the file backing the

@@ -67,6 +67,16 @@ Related ideas:
 
 https://gist.github.com/mish15/9822474 (using CGO)
 
+CGO note: the cgo-malloc branch of this github repo has an implementation that uses CGO to
+call the malloc/calloc/free functions in the C stdlib. Using CGO
+gives up the save-to-disk instantly feature and creates a portability issue where
+you have linked against a specific version of the C stdlib. However if you
+are making/destroying alot of tables, the CGO apporach may be faster. This
+is because calling malloc and free in the standard C library are much faster than
+making repeated system calls to mmap().
+
+more related ideas:
+
 https://groups.google.com/forum/#!topic/golang-nuts/kCQP6S6ZGh0
 
 not fully off-heap, but using a slice instead of a map appears to help GC quite alot too:
