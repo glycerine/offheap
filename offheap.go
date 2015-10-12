@@ -6,7 +6,15 @@ import (
 	"unsafe"
 )
 
+//go:generate msgp
+
 // Copyright (C) 2015 by Jason E. Aten, Ph.D.
+
+// metadata serialization size can never grow bigger
+// than MetadataHeaderMaxBytes (currently one 4K page), without impacting
+// backwards compatibility. We reserve this many bytes
+// at the beginning of the memory mapped file for the metadata.
+const MetadataHeaderMaxBytes = 4096
 
 // HashTable represents the off-heap hash table.
 // Create a new one with NewHashTable(), then use
@@ -16,14 +24,16 @@ import (
 // types. See StringHashTable and ByteKeyHashTable
 // for examples of this specialization process.
 type HashTable struct {
-	Cells      uintptr    `capid:"0"`
-	CellSz     uint64     `capid:"1"`
-	ArraySize  uint64     `capid:"2"`
-	Population uint64     `capid:"3"`
-	ZeroUsed   bool       `capid:"4"`
-	ZeroCell   Cell       `capid:"5"`
-	Offheap    []byte     `capid:"6"`
-	Mmm        MmapMalloc `capid:"7"`
+	MagicNumber   int     // distinguish between reading from empty file versus an on-disk HashTable.
+	Cells         uintptr `msg:"-"`
+	CellSz        uint64
+	ArraySize     uint64
+	Population    uint64
+	ZeroUsed      bool
+	ZeroCell      Cell
+	OffheapHeader []byte     `msg:"-"`
+	OffheapCells  []byte     `msg:"-"`
+	Mmm           MmapMalloc `msg:"-"`
 }
 
 // Create a new hash table, able to hold initialSize count of keys.
@@ -34,16 +44,33 @@ func NewHashTable(initialSize uint64) *HashTable {
 func NewHashFileBacked(initialSize uint64, filepath string) *HashTable {
 
 	t := HashTable{
-		CellSz: uint64(unsafe.Sizeof(Cell{})),
+		MagicNumber: 3030675468910466832,
+		CellSz:      uint64(unsafe.Sizeof(Cell{})),
 	}
 
 	// off-heap and off-gc version
 	t.ArraySize = initialSize
-	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz), filepath)
-	t.Offheap = t.Mmm.Mem
-	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
+	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz)+MetadataHeaderMaxBytes, filepath)
+	t.OffheapHeader = t.Mmm.Mem
+	t.OffheapCells = t.Mmm.Mem[MetadataHeaderMaxBytes:]
+	t.Cells = (uintptr)(unsafe.Pointer(&t.OffheapCells[0]))
 
-	// off-gc but still on-heap version
+	// test deserialize
+	t2 := HashTable{}
+	_, err := t2.UnmarshalMsg(t.OffheapHeader)
+	if err != nil {
+		// common to not be able to deserialize 0 bytes, don't worry
+	} else {
+		fmt.Printf("\n deserialized okay! t2=%#v\n t=%#v\n", t2, t)
+		// no error during de-serialize; okay but verify our MagicNumer too.
+		if t2.MagicNumber == t.MagicNumber {
+			// okay to copy in, we are restoring an existing table from disk
+			t.Population = t2.Population
+			t.ZeroUsed = t2.ZeroUsed
+			t.ZeroCell = t2.ZeroCell
+		}
+	}
+	// old: off-gc but still on-heap version
 	//	t.ArraySize = initialSize
 	//	t.Offheap = make([]byte, t.ArraySize*t.CellSz)
 	//	t.Cells = (uintptr)(unsafe.Pointer(&t.Offheap[0]))
@@ -73,9 +100,9 @@ type Val_t [56]byte
 // UnHashedKey is not stored in the Cell, but rather computed as needed
 // by the basic Insert() and Lookup() methods.
 type Cell struct {
-	UnHashedKey uint64 `capid:"0"`
-	ByteKey     Key_t  `capid:"1"`
-	Value       Val_t  `capid:"2"` // customize this to hold your value's data type entirely here.
+	UnHashedKey uint64
+	ByteKey     Key_t
+	Value       Val_t // customize this to hold your value's data type entirely here.
 }
 
 /*
@@ -143,8 +170,19 @@ func (v *Val_t) GetString() string {
 }
 
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
-func (t *HashTable) Save() {
+func (t *HashTable) Save() error {
+	bts, err := t.MarshalMsg(nil)
+	if err != nil {
+		return fmt.Errorf("offheap.HashTable.Save() error: serialization error from msgp.MarshalMsg(): '%s'", err)
+	}
+
+	if len(bts) > MetadataHeaderMaxBytes {
+		return fmt.Errorf("offheap.HashTable.Save() error: serialization too long: len(bts)==%d is > MetadataHeaderMaxBytes==%d, so serializing the HashTable metadata would overwrite the cell contents; rather than corrupting the cell data we are returning an error here.", len(bts), MetadataHeaderMaxBytes)
+	}
+	copy(t.OffheapHeader, bts)
+
 	t.Mmm.BlockUntilSync()
+	return nil
 }
 
 // CellAt: fetch the cell at a given index. E.g. t.CellAt(pos) replaces t.Cells[pos]
@@ -354,8 +392,8 @@ func (t *HashTable) Clear() {
 	// (Does not resize the array)
 	// Clear regular Cells
 
-	for i := range t.Offheap {
-		t.Offheap[i] = 0
+	for i := range t.OffheapCells {
+		t.OffheapCells[i] = 0
 	}
 	t.Population = 0
 
@@ -434,9 +472,9 @@ sample use: given a HashTable h, enumerate h's contents with:
     }
 */
 type Iterator struct {
-	Tab *HashTable `capid:"0"`
-	Pos int64      `capid:"1"`
-	Cur *Cell      `capid:"2"` // will be set to nil when done with iteration.
+	Tab *HashTable
+	Pos int64
+	Cur *Cell // will be set to nil when done with iteration.
 }
 
 // NewIterator creates a new iterator for HashTable tab.

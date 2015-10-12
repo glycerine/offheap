@@ -1,13 +1,14 @@
 package offheap_test
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 
+	cv "github.com/glycerine/goconvey/convey"
 	"github.com/glycerine/offheap"
-	cv "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSaveRestore(t *testing.T) {
@@ -34,11 +35,11 @@ func TestSaveRestore(t *testing.T) {
 		cv.So(cell.Value[0], cv.ShouldEqual, 55)
 
 		h.InsertIntValue(45, 28)
-
 		// h has:
 		// 23 -> 55
 		// 45 -> 28
 
+		cv.So(h.Population, cv.ShouldEqual, 2)
 		h.Save()
 
 		// copy to a new file to be sure everything is there, then mmap the new file
@@ -60,6 +61,38 @@ func TestSaveRestore(t *testing.T) {
 
 		cell2 = h2.Lookup(45)
 		cv.So(cell2.Value[0], cv.ShouldEqual, 28)
+
+		cv.So(h2.Population, cv.ShouldEqual, 2)
+	})
+}
+
+func TestMetaSaveRestoreMetadataInMsgpack(t *testing.T) {
+	cv.Convey("saving the metadata of a table using msgpack should result in restore-able metadata", t, func() {
+		t1 := offheap.HashTable{
+			Population: 4,
+			ZeroUsed:   true,
+			ZeroCell: offheap.Cell{
+				UnHashedKey: 43,
+				ByteKey:     offheap.Key_t{0x23},
+				Value:       offheap.Val_t{0x57},
+			},
+		}
+		bts, err := t1.MarshalMsg(nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t2 := offheap.HashTable{}
+		left, err := t2.UnmarshalMsg(bts)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(left) > 0 {
+			t.Errorf("%d bytes left over after UnmarshalMsg(): %q", len(left), left)
+		}
+
+		cv.So(t2, cv.ShouldResemble, t1)
+		fmt.Printf("\n len(bts) = %d\n", len(bts))
 
 	})
 }

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/glycerine/offheap"
-	cv "github.com/smartystreets/goconvey/convey"
+	cv "github.com/glycerine/goconvey/convey"
 )
 
 func TestIterator(t *testing.T) {

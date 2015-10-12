@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/glycerine/offheap"
-	cv "github.com/smartystreets/goconvey/convey"
+	cv "github.com/glycerine/goconvey/convey"
 )
 
 type Num struct {
