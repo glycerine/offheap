@@ -61,7 +61,7 @@ func NewHashFileBacked(initialSize uint64, filepath string) *HashTable {
 	if err != nil {
 		// common to not be able to deserialize 0 bytes, don't worry
 	} else {
-		fmt.Printf("\n deserialized okay! t2=%#v\n t=%#v\n", t2, t)
+		//fmt.Printf("\n deserialized okay! t2=%#v\n t=%#v\n", t2, t)
 		// no error during de-serialize; okay but verify our MagicNumer too.
 		if t2.MagicNumber == t.MagicNumber {
 			// okay to copy in, we are restoring an existing table from disk
