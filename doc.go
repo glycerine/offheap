@@ -59,7 +59,9 @@ Example use:
     val, ok := h.LookupStringKey("My number")
     h.DeleteStringKey("My number")
 
-Note that this library is only a starting point of source code, and not intended to be used without customization. Users of the HashTable will have to customize it by changing the definitions of Key_t and Val_t to suite their needs. I'm experimenting next with storing objects in Capnproto serialized format, but this branch (branch capnp) isn't quite ready for use.
+Note that this library is only a starting point of source code, and not intended to be used without customization. Users of the HashTable will have to customize it by changing the definitions of Key_t and Val_t to suite their needs.
+
+On Save(), serialization of the HashTable itself is done using msgpack to write bytes to the first page (4k bytes) of the memory mapped file. This uses github.com/tinylib/msgp which is a blazing fast msgpack serialization library. It is fast because it avoids reflection and pre-computes the serializations (using go generate based inspection of your go source). If you need to serialize your values into the Val_t, I would suggest evaluating the msgp for serialization and deserialization. The author, Philip Hofer, has done a terrific job and put alot of effort into tuning it for performance. If you are still pressed for speed, consider also ommitting the field labels using the '//msgp:tuple MyValueType' annotation. As Mr. Hofer says, "For smaller objects, tuple encoding can yield serious performance improvements." [https://github.com/tinylib/msgp/wiki/Preprocessor-Directives].
 
 Related ideas:
 
