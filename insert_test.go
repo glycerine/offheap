@@ -1,69 +1,75 @@
-package offheap_test
+package offheap
 
 import (
 	"testing"
 
-	"github.com/glycerine/offheap"
-	cv "github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 )
+
+type SomeStruct struct {
+	A int
+	B int
+}
 
 func TestInsert(t *testing.T) {
 
-	h := offheap.NewHashTable(8)
+	h := NewHashTableSomeStruct(8)
 
-	cv.Convey("inserting a non-zero key should enable retrieving them with Lookup", t, func() {
-		cv.So(h.Population, cv.ShouldEqual, 0)
-		cv.So(h.Lookup(23), cv.ShouldEqual, nil)
+	Convey("inserting a non-zero key should enable retrieving them with Lookup", t, func() {
+		So(h.Population, ShouldEqual, 0)
+		So(h.Lookup(23), ShouldEqual, nil)
 		c, ok := h.Insert(23)
-		c.SetInt(55)
-		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(ok, cv.ShouldEqual, true)
-		cv.So(h.Population, cv.ShouldEqual, 1)
-		cv.So(h.Lookup(23), cv.ShouldNotEqual, nil)
+		c.Value.A = 5
+		c.Value.B = 10
+		So(c, ShouldNotEqual, nil)
+		So(ok, ShouldEqual, true)
+		So(h.Population, ShouldEqual, 1)
+		So(h.Lookup(23), ShouldNotEqual, nil)
 		cell := h.Lookup(23)
-		cv.So(cell.Value[0], cv.ShouldEqual, 55)
+		So(cell.Value.A, ShouldEqual, 5)
+		So(cell.Value.B, ShouldEqual, 10)
 	})
 
 	h.Clear()
-	cv.Convey("inserting a zero key should also be retrievable with Lookup", t, func() {
-		cv.So(h.Population, cv.ShouldEqual, 0)
-		cv.So(h.Lookup(0), cv.ShouldEqual, nil)
+	Convey("inserting a zero key should also be retrievable with Lookup", t, func() {
+		So(h.Population, ShouldEqual, 0)
+		So(h.Lookup(0), ShouldEqual, nil)
 		c, ok := h.Insert(0)
-		c.SetInt(55)
-		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(ok, cv.ShouldEqual, true)
-		cv.So(h.Population, cv.ShouldEqual, 1)
-		cv.So(h.Lookup(0), cv.ShouldNotEqual, nil)
+		c.Value.A = 5
+		So(c, ShouldNotEqual, nil)
+		So(ok, ShouldEqual, true)
+		So(h.Population, ShouldEqual, 1)
+		So(h.Lookup(0), ShouldNotEqual, nil)
 		cell := h.Lookup(0)
-		cv.So(cell.Value[0], cv.ShouldEqual, 55)
+		So(cell.Value.A, ShouldEqual, 5)
 	})
 
 	h.Clear()
-	cv.Convey("Insert()-ing the same key twice should return false for the 2nd param on encountering the same key again. For 0 key.", t, func() {
-		cv.So(h.Population, cv.ShouldEqual, 0)
+	Convey("Insert()-ing the same key twice should return false for the 2nd param on encountering the same key again. For 0 key.", t, func() {
+		So(h.Population, ShouldEqual, 0)
 		c, ok := h.Insert(0)
-		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(c.UnHashedKey, cv.ShouldEqual, 0)
-		cv.So(ok, cv.ShouldEqual, true)
+		So(c, ShouldNotEqual, nil)
+		So(c.unHashedKey, ShouldEqual, 1)
+		So(ok, ShouldEqual, true)
 
 		c, ok = h.Insert(0)
-		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(c.UnHashedKey, cv.ShouldEqual, 0)
-		cv.So(ok, cv.ShouldEqual, false)
+		So(c, ShouldNotEqual, nil)
+		So(c.unHashedKey, ShouldEqual, 1)
+		So(ok, ShouldEqual, false)
 	})
 
 	h.Clear()
-	cv.Convey("Insert()-ing the same key twice should return false for the 2nd param on encountering the same key again. For not-zero key.", t, func() {
-		cv.So(h.Population, cv.ShouldEqual, 0)
+	Convey("Insert()-ing the same key twice should return false for the 2nd param on encountering the same key again. For not-zero key.", t, func() {
+		So(h.Population, ShouldEqual, 0)
 		c, ok := h.Insert(1)
-		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(c.UnHashedKey, cv.ShouldEqual, 1)
-		cv.So(ok, cv.ShouldEqual, true)
+		So(c, ShouldNotEqual, nil)
+		So(c.unHashedKey, ShouldEqual, 1)
+		So(ok, ShouldEqual, true)
 
 		c, ok = h.Insert(1)
-		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(c.UnHashedKey, cv.ShouldEqual, 1)
-		cv.So(ok, cv.ShouldEqual, false)
+		So(c, ShouldNotEqual, nil)
+		So(c.unHashedKey, ShouldEqual, 1)
+		So(ok, ShouldEqual, false)
 	})
 
 }

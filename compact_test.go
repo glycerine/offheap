@@ -1,48 +1,51 @@
-package offheap_test
+package offheap
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/glycerine/offheap"
-	cv "github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestCompact(t *testing.T) {
 
-	cv.Convey("Given a big table with no values it, Compact() should re-allocate it to be smaller", t, func() {
-		h := offheap.NewHashTable(128)
-		cv.So(h.ArraySize, cv.ShouldEqual, 128)
-		cv.So(h.Population, cv.ShouldEqual, 0)
+	Convey("Given a big table with no values it, Compact() should re-allocate it to be smaller", t, func() {
+		h := NewHashTableInt(128)
+		So(h.ArraySize, ShouldEqual, 128)
+		So(h.Population, ShouldEqual, 0)
 
 		h.Compact()
 
-		cv.So(h.ArraySize, cv.ShouldEqual, 1)
-		cv.So(h.Population, cv.ShouldEqual, 0)
+		So(h.ArraySize, ShouldEqual, 1)
+		So(h.Population, ShouldEqual, 0)
 	})
 
 }
 
 func TestCompatAfterDelete(t *testing.T) {
 
-	h := offheap.NewHashTable(2)
+	h := NewHashTableInt(2)
 
 	h.Clear()
-	cv.Convey("after being filled up and then deleted down to just 2 elements, Compact() should reduce table size to 4", t, func() {
+	Convey("after being filled up and then deleted down to just 2 elements, Compact() should reduce table size to 4", t, func() {
 		N := 100
 
+		fmt.Println("Array is", h.ArraySize)
+
 		// fill up a table
-		cv.So(h.Population, cv.ShouldEqual, 0)
+		So(h.Population, ShouldEqual, 0)
 		for i := 0; i < N; i++ {
 			h.Insert(uint64(i))
+			So(h.Population, ShouldEqual, i+1)
 		}
 
 		// now delete from it
 		for i := 0; i < N-2; i++ {
 			h.DeleteKey(uint64(i))
 		}
-		cv.So(h.ArraySize, cv.ShouldEqual, 256)
+		So(h.ArraySize, ShouldEqual, 256)
 		h.Compact()
-		cv.So(h.ArraySize, cv.ShouldEqual, 4)
+		So(h.ArraySize, ShouldEqual, 4)
 
 	})
 }

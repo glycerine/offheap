@@ -1,144 +1,133 @@
-package offheap_test
+package offheap
 
 import (
 	"testing"
 
-	"github.com/glycerine/offheap"
-	cv "github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIterator(t *testing.T) {
 
-	cv.Convey("Given a table with 0,1,2 in it, the Iterator should give all three values back", t, func() {
-		h := offheap.NewHashTable(8)
-		cv.So(h.Population, cv.ShouldEqual, 0)
+	Convey("Given a table with 0,1,2 in it, the Iterator should give all three values back", t, func() {
+		h := NewHashTableInt(8)
 		for i := 0; i < 3; i++ {
-			_, ok := h.Insert(uint64(i))
-			cv.So(ok, cv.ShouldEqual, true)
+			h.InsertInt(uint64(i), i+10)
 			if i == 0 {
 				// iterator should start with the zero value
 				it := h.NewIterator()
-				cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 0)
+				So(it.Cur.Value, ShouldEqual, 10)
 			}
 		}
-		cv.So(h.Population, cv.ShouldEqual, 3)
+		So(h.Population, ShouldEqual, 3)
 
-		found := []uint64{}
+		found := []int{}
 		for it := h.NewIterator(); it.Cur != nil; it.Next() {
-			found = append(found, it.Cur.UnHashedKey)
+			found = append(found, it.Cur.Value)
 		}
-		cv.So(len(found), cv.ShouldEqual, 3)
-		cv.So(found, cv.ShouldContain, 0)
-		cv.So(found, cv.ShouldContain, 1)
-		cv.So(found, cv.ShouldContain, 2)
+		So(len(found), ShouldEqual, 3)
+		So(found, ShouldContain, 10)
+		So(found, ShouldContain, 11)
+		So(found, ShouldContain, 12)
 	})
 
-	cv.Convey("Given a table with 1,2,3 in it, the Iterator should give all three values back", t, func() {
-		h := offheap.NewHashTable(8)
-		cv.So(h.Population, cv.ShouldEqual, 0)
+	Convey("Given a table with 1,2,3 in it, the Iterator should give all three values back", t, func() {
+		h := NewHashTableInt(8)
+		So(h.Population, ShouldEqual, 0)
 		for i := 1; i < 4; i++ {
-			_, ok := h.Insert(uint64(i))
-			cv.So(ok, cv.ShouldEqual, true)
-			if i == 0 {
+			h.InsertInt(uint64(i), i+100)
+			if i == 1 {
 				// iterator should not start with the zero value, not inserted.
 				it := h.NewIterator()
-				cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 1)
+				So(it.Cur, ShouldNotBeNil)
+				So(it.Cur.Value, ShouldEqual, 101)
 			}
 		}
-		cv.So(h.Population, cv.ShouldEqual, 3)
+		So(h.Population, ShouldEqual, 3)
 
-		found := []uint64{}
+		found := []int{}
 		for it := h.NewIterator(); it.Cur != nil; it.Next() {
-			found = append(found, it.Cur.UnHashedKey)
+			found = append(found, it.Cur.Value)
 		}
-		cv.So(len(found), cv.ShouldEqual, 3)
-		cv.So(found, cv.ShouldContain, 3)
-		cv.So(found, cv.ShouldContain, 1)
-		cv.So(found, cv.ShouldContain, 2)
+		So(len(found), ShouldEqual, 3)
+		So(found, ShouldContain, 101)
+		So(found, ShouldContain, 102)
+		So(found, ShouldContain, 103)
 	})
 
-	cv.Convey("Given a table with the regular 0-th slot and the special zero-location spot occupied, then the the Iterator should still give all the values back", t, func() {
-		h := offheap.NewHashTable(4)
-		cv.So(h.Population, cv.ShouldEqual, 0)
+	Convey("Given a table with the regular 0-th slot and the special zero-location spot occupied, then the the Iterator should still give all the values back", t, func() {
+		h := NewHashTableInt(4)
 		for i := 0; i < 2; i++ {
-			_, ok := h.Insert(uint64(i))
-			cv.So(ok, cv.ShouldEqual, true)
+			h.InsertInt(uint64(i), i+200)
 			if i == 0 {
 				// iterator should start with the zero value
 				it := h.NewIterator()
-				cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 0)
+				So(it.Cur.Value, ShouldEqual, 200)
 			}
 		}
-		cv.So(h.Population, cv.ShouldEqual, 2)
-		cv.So(h.CellAt(0).UnHashedKey, cv.ShouldEqual, 1) // important for this test that the regular 0-th (first) cell slot be occupied.
+		So(h.Population, ShouldEqual, 2)
 
-		found := []uint64{}
+		found := []int{}
 		for it := h.NewIterator(); it.Cur != nil; it.Next() {
-			found = append(found, it.Cur.UnHashedKey)
+			found = append(found, it.Cur.Value)
 		}
-		cv.So(len(found), cv.ShouldEqual, 2)
-		cv.So(found, cv.ShouldContain, 0)
-		cv.So(found, cv.ShouldContain, 1)
+		So(len(found), ShouldEqual, 2)
+		So(found, ShouldContain, 200)
+		So(found, ShouldContain, 201)
 	})
 
-	cv.Convey("Given a table with the regular 0-th slot *empty* and the special zero-location spot occupied, then the the Iterator should still give all the values back", t, func() {
-		h := offheap.NewHashTable(8)
-		cv.So(h.Population, cv.ShouldEqual, 0)
+	Convey("Given a table with the regular 0-th slot *empty* and the special zero-location spot occupied, then the the Iterator should still give all the values back", t, func() {
+		h := NewHashTableInt(8)
+		So(h.Population, ShouldEqual, 0)
 		for i := 0; i < 2; i++ {
-			_, ok := h.Insert(uint64(i))
-			cv.So(ok, cv.ShouldEqual, true)
+			h.InsertInt(uint64(i), 300+i)
 			if i == 0 {
 				// iterator should start with the zero value
 				it := h.NewIterator()
-				cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 0)
-				cv.So(it.Pos, cv.ShouldEqual, -1)
+				So(it.Cur.Value, ShouldEqual, 300)
+				So(it.Pos, ShouldEqual, -1)
 			}
 		}
-		cv.So(h.Population, cv.ShouldEqual, 2)
-		cv.So(h.CellAt(0).UnHashedKey, cv.ShouldEqual, 0) // important for this test that the regular 0-th (first) cell slot be *empty*.
+		So(h.Population, ShouldEqual, 2)
 
-		found := []uint64{}
+		found := []int{}
 		for it := h.NewIterator(); it.Cur != nil; it.Next() {
-			found = append(found, it.Cur.UnHashedKey)
+			found = append(found, it.Cur.Value)
 		}
-		cv.So(len(found), cv.ShouldEqual, 2)
-		cv.So(found, cv.ShouldContain, 0)
-		cv.So(found, cv.ShouldContain, 1)
+		So(len(found), ShouldEqual, 2)
+		So(found, ShouldContain, 300)
+		So(found, ShouldContain, 301)
 	})
 
-	cv.Convey("Given a table with the regular 0-th slot *filled* and the special zero-location spot *empty*, then the the Iterator should still give the one value back", t, func() {
+	Convey("Given a table with the regular 0-th slot *filled* and the special zero-location spot *empty*, then the the Iterator should still give the one value back", t, func() {
 		// size 4 just happens to generate an occupation at h.Cells[0]
-		h := offheap.NewHashTable(4)
-		cv.So(h.Population, cv.ShouldEqual, 0)
+		h := NewHashTableInt(4)
 		i := 1
-		_, ok := h.Insert(uint64(i))
-		cv.So(ok, cv.ShouldEqual, true)
+		h.InsertInt(uint64(i), 1001)
 
 		// iterator should start with the zero value
 		it := h.NewIterator()
-		cv.So(it.Cur.UnHashedKey, cv.ShouldEqual, 1)
-		cv.So(it.Pos, cv.ShouldEqual, 0)
+		So(it.Cur.Value, ShouldEqual, 1001)
+		So(it.Pos, ShouldEqual, 0)
 
-		cv.So(h.Population, cv.ShouldEqual, 1)
-		cv.So(h.CellAt(0).UnHashedKey, cv.ShouldEqual, 1) // important for this test that the regular 0-th (first) cell slot be *filled*.
+		So(h.Population, ShouldEqual, 1)
 
-		found := []uint64{}
+		found := []int{}
 		for it := h.NewIterator(); it.Cur != nil; it.Next() {
-			found = append(found, it.Cur.UnHashedKey)
+			found = append(found, it.Cur.Value)
 		}
-		cv.So(len(found), cv.ShouldEqual, 1)
-		cv.So(found, cv.ShouldContain, 1)
+		So(len(found), ShouldEqual, 1)
+		So(found, ShouldContain, 1001)
 	})
 
-	cv.Convey("Given an empty table, an Iterator should still work fine, without crashing", t, func() {
-		h := offheap.NewHashTable(4)
-		cv.So(h.Population, cv.ShouldEqual, 0)
+	Convey("Given an empty table, an Iterator should still work fine, without crashing", t, func() {
+		h := NewHashTableInt(4)
+		So(h.Population, ShouldEqual, 0)
 
-		found := []uint64{}
+		found := []int{}
 		for it := h.NewIterator(); it.Cur != nil; it.Next() {
-			found = append(found, it.Cur.UnHashedKey)
+			found = append(found, it.Cur.Value)
 		}
-		cv.So(len(found), cv.ShouldEqual, 0)
+		So(len(found), ShouldEqual, 0)
 	})
 
 }

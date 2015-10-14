@@ -1,4 +1,4 @@
-package offheap_test
+package offheap
 
 import (
 	"os"
@@ -6,8 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glycerine/offheap"
-	cv "github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSaveRestore(t *testing.T) {
@@ -19,26 +18,29 @@ func TestSaveRestore(t *testing.T) {
 	}
 	defer os.Remove(fn)
 
-	h := offheap.NewHashFileBacked(8, fn)
+	h := NewHashTableIntFileBacked(8, fn)
 
-	cv.Convey("saving and then loading a table should restore the contents from disk", t, func() {
-		cv.So(h.Population, cv.ShouldEqual, 0)
-		cv.So(h.Lookup(23), cv.ShouldEqual, nil)
-		c, ok := h.Insert(23)
-		c.SetInt(55)
-		cv.So(c, cv.ShouldNotEqual, nil)
-		cv.So(ok, cv.ShouldEqual, true)
-		cv.So(h.Population, cv.ShouldEqual, 1)
-		cv.So(h.Lookup(23), cv.ShouldNotEqual, nil)
+	Convey("saving and then loading a table should restore the contents from disk", t, func() {
+		So(h.Population, ShouldEqual, 0)
+		So(h.Lookup(23), ShouldEqual, nil)
+		h.InsertInt(23, 55)
+		So(h.Population, ShouldEqual, 1)
+		So(h.Lookup(23), ShouldNotEqual, nil)
 		cell := h.Lookup(23)
-		cv.So(cell.Value[0], cv.ShouldEqual, 55)
+		So(cell.Value, ShouldEqual, 55)
 
-		h.InsertIntValue(45, 28)
+		h.InsertInt(45, 28)
+		h.InsertInt(0, 111)
 
 		// h has:
 		// 23 -> 55
 		// 45 -> 28
+		// 0 -> 111
 
+		// custom metadata
+		h.A = 42
+		h.B = 33.33
+		copy(h.C[:], []byte("1234567890"))
 		h.Save()
 
 		// copy to a new file to be sure everything is there, then mmap the new file
@@ -53,13 +55,21 @@ func TestSaveRestore(t *testing.T) {
 		}
 		defer os.Remove(fncopy)
 
-		h2 := offheap.NewHashFileBacked(8, fncopy)
+		h2 := NewHashTableIntFileBacked(8, fn)
 
-		cell2 := h2.Lookup(23)
-		cv.So(cell2.Value[0], cv.ShouldEqual, 55)
+		So(h2.Population, ShouldEqual, 3)
 
-		cell2 = h2.Lookup(45)
-		cv.So(cell2.Value[0], cv.ShouldEqual, 28)
+		v, _ := h2.LookupInt(23)
+		So(v, ShouldEqual, 55)
+		v, _ = h2.LookupInt(45)
+		So(v, ShouldEqual, 28)
+		v, _ = h2.LookupInt(0)
+		So(v, ShouldEqual, 111)
+
+		So(h2.A, ShouldEqual, 42)
+		So(h2.B, ShouldEqual, 33.33)
+
+		So(string(h2.C[:]), ShouldEqual, "1234567890")
 
 	})
 }

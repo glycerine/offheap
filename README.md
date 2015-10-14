@@ -1,6 +1,9 @@
 offheap (formerly go-offheap-hashtable)
 ====================
 
+
+*TODO update .. doesnt match the desc anymore*
+
 Docs:
 
 http://godoc.org/github.com/glycerine/offheap
@@ -13,18 +16,18 @@ When GC pauses are long because you've got big hash tables in Go, you need an of
 
  We accomplish this by writing our own Malloc() and Free() implementation
  (see malloc.go) which requests memory directly from the OS.
- The keys, the values, and the entire hash table itself is kept 
+ The keys, the values, and the entire hash table itself is kept
  in this off-heap storage. This storage can also optionally be backed by a memory mapped file for speedy persistence and fast startup times.
 
 Update: the cgo-malloc branch of this github repo has an implementation that uses CGO to
-call the malloc/calloc/free functions in the C stdlib. Using CGO 
+call the malloc/calloc/free functions in the C stdlib. Using CGO
 gives up the save-to-disk instantly feature and creates a portability issue where
 you have linked against a specific version of the C stdlib. However if you
 are making/destroying alot of tables, the CGO apporach may be faster.
 
  See offheap.go for all the interesting code. Modify val_t to hold
  you values, and key_t to contain your keys. Current sample code
- for three types of keys (int64, []byte, and strings) is provided (see bytekey.go). 
+ for three types of keys (int64, []byte, and strings) is provided (see bytekey.go).
  For the hashing function itself, the incredibly fast [xxhash64](https://github.com/OneOfOne/xxhash) is used to produce uint64 hashes of strings and []byte.
 
  Note that all your key and values should be inline in the Cell. If you

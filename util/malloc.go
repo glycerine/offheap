@@ -1,4 +1,4 @@
-package offheap
+package util
 
 import (
 	"fmt"
@@ -134,8 +134,6 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 	mm.BytesAlloc = sz
 
 	prot := syscall.PROT_READ | syscall.PROT_WRITE
-
-	vprintf("\n ------->> path = '%v',  mm.Fd = %v, with flags = %x, sz = %v,  prot = '%v'\n", path, mm.Fd, flags, sz, prot)
 
 	var mmap []byte
 	var err error

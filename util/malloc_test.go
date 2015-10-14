@@ -1,14 +1,12 @@
-package offheap_test
+package util
 
 import (
 	"testing"
-
-	"github.com/glycerine/offheap"
 )
 
 func TestMalloc(t *testing.T) {
 
-	mm := offheap.Malloc(10*1024, "./mmap.dat")
+	mm := Malloc(10*1024, "./mmap.dat")
 
 	// regular bytes searching functions work, find the first line:
 	//end := bytes.Index(mmap, []byte("\n"))
@@ -23,7 +21,7 @@ func TestMalloc(t *testing.T) {
 
 	mm.Free()
 
-	mm2 := offheap.Malloc(10*1024, "")
+	mm2 := Malloc(10*1024, "")
 	copy(mm2.Mem[0:26], writeme)
 	mm2.Free()
 
