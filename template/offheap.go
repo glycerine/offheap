@@ -37,16 +37,32 @@ type HashTable_LT_ struct {
 	mmm          util.MmapMalloc
 }
 
+const MAGIC_NUMBER = 0x123456789ABCDEF
+
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTable_LT_(initialSize uint64) *HashTable_LT_ {
 	return NewHashTable_LT_FileBacked(initialSize, "")
 }
 
+// func HashTable_LT_FromFile(filepath string) (*HashTable_LT_, error) {
+// 	h := NewHashTable_LT_FileBacked(-1, filepath)
+// 	if h.MagicNumber == MAGIC_NUMBER {
+// 		return h, nil
+// 	} else {
+// 		return nil, errors.New(fmt.Sprintf("not a valid hashtable at %s", filepath))
+// 	}
+// }
+
 func NewHashTable_LT_FileBacked(initialSize uint64, filepath string) *HashTable_LT_ {
 	metaSize := unsafe.Sizeof(HashTableMetadata_LT_{})
 	cellSize := unsafe.Sizeof(Cell_LT_{})
 	customSize := unsafe.Sizeof(HashTableCustomMetadata_LT_{})
-	mmm := *util.Malloc(int64(metaSize+customSize+uintptr(initialSize+1)*cellSize), filepath)
+
+	var toAlloc int64 = -1
+	if filepath == "" {
+		toAlloc = int64(metaSize + customSize + uintptr(initialSize+1)*cellSize)
+	}
+	mmm := *util.Malloc(toAlloc, filepath)
 
 	baseP := unsafe.Pointer(&mmm.Mem[0])
 	base := (uintptr)(baseP)
@@ -64,11 +80,11 @@ func NewHashTable_LT_FileBacked(initialSize uint64, filepath string) *HashTable_
 
 	// check metadata
 	h.HashTableMetadata_LT_ = (*HashTableMetadata_LT_)(baseP)
-	if h.MagicNumber == 0x123456789ABCDEF {
+	if h.MagicNumber == MAGIC_NUMBER {
 		// mapped from file
 	} else {
 		// fresh
-		h.MagicNumber = 0x123456789ABCDEF
+		h.MagicNumber = MAGIC_NUMBER
 		h.ArraySize = initialSize
 		h.Population = 0
 	}
@@ -87,6 +103,10 @@ var _empty_T_ _T_
 // ZeroValue sets the cell's value to all zeros.
 func (cell *Cell_LT_) ZeroValue() {
 	*(&cell.Value) = _empty_T_
+}
+
+func (t *HashTable_LT_) Bytes() []byte {
+	return t.offheap
 }
 
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
