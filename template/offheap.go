@@ -37,7 +37,7 @@ type HashTable_LT_ struct {
 	mmm          util.MmapMalloc
 }
 
-const MAGIC_NUMBER = 0x123456789ABCDEF
+const MAGIC_NUMBER_LT_ = 0x123456789ABCDEF
 
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTable_LT_(initialSize uint64) *HashTable_LT_ {
@@ -80,11 +80,11 @@ func NewHashTable_LT_FileBacked(initialSize uint64, filepath string) *HashTable_
 
 	// check metadata
 	h.HashTableMetadata_LT_ = (*HashTableMetadata_LT_)(baseP)
-	if h.MagicNumber == MAGIC_NUMBER {
+	if h.MagicNumber == MAGIC_NUMBER_LT_ {
 		// mapped from file
 	} else {
 		// fresh
-		h.MagicNumber = MAGIC_NUMBER
+		h.MagicNumber = MAGIC_NUMBER_LT_
 		h.ArraySize = initialSize
 		h.Population = 0
 	}
