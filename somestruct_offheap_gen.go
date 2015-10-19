@@ -36,16 +36,33 @@ type HashTableSomeStruct struct {
 	mmm          util.MmapMalloc
 }
 
+const MAGIC_NUMBERSomeStruct = 0x123456789ABCDEF
+
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTableSomeStruct(initialSize uint64) *HashTableSomeStruct {
 	return NewHashTableSomeStructFileBacked(initialSize, "")
 }
 
+// func HashTableSomeStructFromFile(filepath string) (*HashTableSomeStruct, error) {
+// h := NewHashTableSomeStructFileBacked(-1, filepath)
+// 	if h.MagicNumber == MAGIC_NUMBER {
+// 		return h, nil
+// 	} else {
+// 		return nil, errors.New(fmt.Sprintf("not a valid hashtable at %s", filepath))
+// 	}
+// }
+
 func NewHashTableSomeStructFileBacked(initialSize uint64, filepath string) *HashTableSomeStruct {
+	initialSize = util.UpperPowerOfTwo(initialSize)
 	metaSize := unsafe.Sizeof(HashTableMetadataSomeStruct{})
 	cellSize := unsafe.Sizeof(CellSomeStruct{})
 	customSize := unsafe.Sizeof(HashTableCustomMetadataSomeStruct{})
-	mmm := *util.Malloc(int64(metaSize+customSize+uintptr(initialSize+1)*cellSize), filepath)
+
+	var toAlloc int64 = -1
+	if filepath == "" {
+		toAlloc = int64(metaSize + customSize + uintptr(initialSize+1)*cellSize)
+	}
+	mmm := *util.Malloc(toAlloc, filepath)
 
 	baseP := unsafe.Pointer(&mmm.Mem[0])
 	base := (uintptr)(baseP)
@@ -63,11 +80,11 @@ func NewHashTableSomeStructFileBacked(initialSize uint64, filepath string) *Hash
 
 	// check metadata
 	h.HashTableMetadataSomeStruct = (*HashTableMetadataSomeStruct)(baseP)
-	if h.MagicNumber == 0x123456789ABCDEF {
+	if h.MagicNumber == MAGIC_NUMBERSomeStruct {
 		// mapped from file
 	} else {
 		// fresh
-		h.MagicNumber = 0x123456789ABCDEF
+		h.MagicNumber = MAGIC_NUMBERSomeStruct
 		h.ArraySize = initialSize
 		h.Population = 0
 	}
@@ -86,6 +103,10 @@ var _emptySomeStruct SomeStruct
 // ZeroValue sets the cell's value to all zeros.
 func (cell *CellSomeStruct) ZeroValue() {
 	*(&cell.Value) = _emptySomeStruct
+}
+
+func (t *HashTableSomeStruct) Bytes() []byte {
+	return t.offheap
 }
 
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()

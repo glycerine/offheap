@@ -1,7 +1,6 @@
 package offheap
 
 import (
-	"fmt"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -29,8 +28,6 @@ func TestCompatAfterDelete(t *testing.T) {
 	h.Clear()
 	Convey("after being filled up and then deleted down to just 2 elements, Compact() should reduce table size to 4", t, func() {
 		N := 100
-
-		fmt.Println("Array is", h.ArraySize)
 
 		// fill up a table
 		So(h.Population, ShouldEqual, 0)

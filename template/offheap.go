@@ -54,6 +54,7 @@ func NewHashTable_LT_(initialSize uint64) *HashTable_LT_ {
 // }
 
 func NewHashTable_LT_FileBacked(initialSize uint64, filepath string) *HashTable_LT_ {
+	initialSize = util.UpperPowerOfTwo(initialSize)
 	metaSize := unsafe.Sizeof(HashTableMetadata_LT_{})
 	cellSize := unsafe.Sizeof(Cell_LT_{})
 	customSize := unsafe.Sizeof(HashTableCustomMetadata_LT_{})

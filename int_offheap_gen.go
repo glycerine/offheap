@@ -6,6 +6,7 @@ package offheap
 
 import (
 	"fmt"
+	"os"
 	"unsafe"
 
 	"github.com/remerge/offheap/util"
@@ -36,16 +37,34 @@ type HashTableInt struct {
 	mmm          util.MmapMalloc
 }
 
+const MAGIC_NUMBERInt = 0x123456789ABCDEF
+
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTableInt(initialSize uint64) *HashTableInt {
 	return NewHashTableIntFileBacked(initialSize, "")
 }
 
+// func HashTableIntFromFile(filepath string) (*HashTableInt, error) {
+// h := NewHashTableIntFileBacked(-1, filepath)
+// 	if h.MagicNumber == MAGIC_NUMBER {
+// 		return h, nil
+// 	} else {
+// 		return nil, errors.New(fmt.Sprintf("not a valid hashtable at %s", filepath))
+// 	}
+// }
+
 func NewHashTableIntFileBacked(initialSize uint64, filepath string) *HashTableInt {
+	initialSize = util.UpperPowerOfTwo(initialSize)
 	metaSize := unsafe.Sizeof(HashTableMetadataInt{})
 	cellSize := unsafe.Sizeof(CellInt{})
 	customSize := unsafe.Sizeof(HashTableCustomMetadataInt{})
-	mmm := *util.Malloc(int64(metaSize+customSize+uintptr(initialSize+1)*cellSize), filepath)
+
+	var toAlloc int64 = -1
+	fi, err := os.Stat(filepath)
+	if filepath == "" || err != nil || fi.IsDir() {
+		toAlloc = int64(metaSize + customSize + uintptr(initialSize+1)*cellSize)
+	}
+	mmm := *util.Malloc(toAlloc, filepath)
 
 	baseP := unsafe.Pointer(&mmm.Mem[0])
 	base := (uintptr)(baseP)
@@ -63,11 +82,11 @@ func NewHashTableIntFileBacked(initialSize uint64, filepath string) *HashTableIn
 
 	// check metadata
 	h.HashTableMetadataInt = (*HashTableMetadataInt)(baseP)
-	if h.MagicNumber == 0x123456789ABCDEF {
+	if h.MagicNumber == MAGIC_NUMBERInt {
 		// mapped from file
 	} else {
 		// fresh
-		h.MagicNumber = 0x123456789ABCDEF
+		h.MagicNumber = MAGIC_NUMBERInt
 		h.ArraySize = initialSize
 		h.Population = 0
 	}
@@ -86,6 +105,10 @@ var _emptyint int
 // ZeroValue sets the cell's value to all zeros.
 func (cell *CellInt) ZeroValue() {
 	*(&cell.Value) = _emptyint
+}
+
+func (t *HashTableInt) Bytes() []byte {
+	return t.offheap
 }
 
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
