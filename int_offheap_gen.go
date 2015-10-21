@@ -6,7 +6,6 @@ package offheap
 
 import (
 	"fmt"
-	"os"
 	"unsafe"
 
 	"github.com/remerge/offheap/util"
@@ -60,8 +59,7 @@ func NewHashTableIntFileBacked(initialSize uint64, filepath string) *HashTableIn
 	customSize := unsafe.Sizeof(HashTableCustomMetadataInt{})
 
 	var toAlloc int64 = -1
-	fi, err := os.Stat(filepath)
-	if filepath == "" || err != nil || fi.IsDir() {
+	if filepath == "" {
 		toAlloc = int64(metaSize + customSize + uintptr(initialSize+1)*cellSize)
 	}
 	mmm := *util.Malloc(toAlloc, filepath)
@@ -328,6 +326,9 @@ func (t *HashTableInt) Repopulate(desiredSize uint64) {
 
 	// Allocate new table
 	s := NewHashTableInt(desiredSize)
+
+	// copy custom metadata
+	*s.HashTableCustomMetadataInt = *t.HashTableCustomMetadataInt
 
 	if t.zero().unHashedKey == 1 {
 		zc := s.zero()

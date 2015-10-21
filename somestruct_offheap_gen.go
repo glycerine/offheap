@@ -327,6 +327,9 @@ func (t *HashTableSomeStruct) Repopulate(desiredSize uint64) {
 	// Allocate new table
 	s := NewHashTableSomeStruct(desiredSize)
 
+	// copy custom metadata
+	*s.HashTableCustomMetadataSomeStruct = *t.HashTableCustomMetadataSomeStruct
+
 	if t.zero().unHashedKey == 1 {
 		zc := s.zero()
 		zc.Value = t.zero().Value
