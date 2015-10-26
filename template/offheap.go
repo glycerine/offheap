@@ -1,7 +1,9 @@
 package template
 
 import (
+	"errors"
 	"fmt"
+	"hash/crc32"
 	"unsafe"
 
 	"github.com/cheekybits/genny/generic"
@@ -18,6 +20,7 @@ type HashTableMetadata_LT_ struct {
 	MagicNumber uint64
 	ArraySize   uint64
 	Population  uint64
+	Checksum    uint32
 }
 
 type HashTableCustomMetadata_LT_ struct {
@@ -41,28 +44,46 @@ const MAGIC_NUMBER_LT_ = 0x123456789ABCDEF
 
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTable_LT_(initialSize uint64) *HashTable_LT_ {
-	return NewHashTable_LT_FileBacked(initialSize, "")
+	h, _ := NewHashTable_LT_FileBacked(initialSize, "")
+	return h
 }
 
-// func HashTable_LT_FromFile(filepath string) (*HashTable_LT_, error) {
-// 	h := NewHashTable_LT_FileBacked(-1, filepath)
-// 	if h.MagicNumber == MAGIC_NUMBER {
-// 		return h, nil
-// 	} else {
-// 		return nil, errors.New(fmt.Sprintf("not a valid hashtable at %s", filepath))
-// 	}
-// }
+func OpenHashTable_LT_FileBacked(filepath string) (*HashTable_LT_, error) {
+	h := allocHashTable_LT_FileBacked(0, filepath)
+	// check metadata
+	if h.MagicNumber != MAGIC_NUMBER_LT_ {
+		h.DestroyHashTable()
+		return nil, errors.New(fmt.Sprintf("mmaped file header is wrong. Magic number missing. file=%s", filepath))
 
-func NewHashTable_LT_FileBacked(initialSize uint64, filepath string) *HashTable_LT_ {
+	}
+	sum := crc32.ChecksumIEEE(h.offheapCells)
+	if h.Checksum != sum {
+		// checksum error
+		h.DestroyHashTable()
+		return nil, errors.New(fmt.Sprintf("mmaped file checksum is invalid. want=%d have=%d file=%s", h.Checksum, sum, filepath))
+	}
+	return h, nil
+}
+
+func NewHashTable_LT_FileBacked(initialSize uint64, filepath string) (*HashTable_LT_, error) {
+	// fresh
 	initialSize = util.UpperPowerOfTwo(initialSize)
+	h := allocHashTable_LT_FileBacked(initialSize, filepath)
+	h.MagicNumber = MAGIC_NUMBER_LT_
+	h.ArraySize = initialSize
+	h.Population = 0
+	return h, nil
+}
+
+func allocHashTable_LT_FileBacked(initialSize uint64, filepath string) *HashTable_LT_ {
 	metaSize := unsafe.Sizeof(HashTableMetadata_LT_{})
 	cellSize := unsafe.Sizeof(Cell_LT_{})
 	customSize := unsafe.Sizeof(HashTableCustomMetadata_LT_{})
-
 	var toAlloc int64 = -1
-	if filepath == "" {
+	if initialSize > 0 {
 		toAlloc = int64(metaSize + customSize + uintptr(initialSize+1)*cellSize)
 	}
+
 	mmm := *util.Malloc(toAlloc, filepath)
 
 	baseP := unsafe.Pointer(&mmm.Mem[0])
@@ -81,16 +102,7 @@ func NewHashTable_LT_FileBacked(initialSize uint64, filepath string) *HashTable_
 
 	// check metadata
 	h.HashTableMetadata_LT_ = (*HashTableMetadata_LT_)(baseP)
-	if h.MagicNumber == MAGIC_NUMBER_LT_ {
-		// mapped from file
-	} else {
-		// fresh
-		h.MagicNumber = MAGIC_NUMBER_LT_
-		h.ArraySize = initialSize
-		h.Population = 0
-	}
 	h.HashTableCustomMetadata_LT_ = (*HashTableCustomMetadata_LT_)((unsafe.Pointer)(base + metaSize))
-
 	return h
 }
 
@@ -112,6 +124,8 @@ func (t *HashTable_LT_) Bytes() []byte {
 
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
 func (t *HashTable_LT_) Save() {
+
+	t.Checksum = crc32.ChecksumIEEE(t.offheapCells)
 	t.mmm.BlockUntilSync()
 }
 
@@ -277,7 +291,7 @@ func (t *HashTable_LT_) DeleteCell_LT_(cell *Cell_LT_) {
 	}
 }
 
-// Clear does not resize the table, but zeroes-out all entries.
+// Clear does not resize the table, but zeroes-out all entries and the custom metadata
 func (t *HashTable_LT_) Clear() {
 	// (Does not resize the array)
 	// Clear regular cells

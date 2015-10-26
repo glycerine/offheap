@@ -18,7 +18,7 @@ func TestSaveRestore(t *testing.T) {
 	}
 	defer os.Remove(fn)
 
-	h := NewHashTableIntFileBacked(8, fn)
+	h, _ := NewHashTableIntFileBacked(16, fn)
 
 	Convey("saving and then loading a table should restore the contents from disk", t, func() {
 		So(h.Population, ShouldEqual, 0)
@@ -55,7 +55,9 @@ func TestSaveRestore(t *testing.T) {
 		}
 		defer os.Remove(fncopy)
 
-		h2 := NewHashTableIntFileBacked(8, fn)
+		h2, err := OpenHashTableIntFileBacked(fn)
+		So(err, ShouldBeNil)
+		So(h2.Checksum, ShouldNotEqual, 0)
 
 		So(h2.Population, ShouldEqual, 3)
 

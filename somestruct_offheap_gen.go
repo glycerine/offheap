@@ -5,7 +5,9 @@
 package offheap
 
 import (
+	"errors"
 	"fmt"
+	"hash/crc32"
 	"unsafe"
 
 	"github.com/remerge/offheap/util"
@@ -17,6 +19,7 @@ type HashTableMetadataSomeStruct struct {
 	MagicNumber uint64
 	ArraySize   uint64
 	Population  uint64
+	Checksum    uint32
 }
 
 type HashTableCustomMetadataSomeStruct struct {
@@ -40,28 +43,46 @@ const MAGIC_NUMBERSomeStruct = 0x123456789ABCDEF
 
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTableSomeStruct(initialSize uint64) *HashTableSomeStruct {
-	return NewHashTableSomeStructFileBacked(initialSize, "")
+	h, _ := NewHashTableSomeStructFileBacked(initialSize, "")
+	return h
 }
 
-// func HashTableSomeStructFromFile(filepath string) (*HashTableSomeStruct, error) {
-// h := NewHashTableSomeStructFileBacked(-1, filepath)
-// 	if h.MagicNumber == MAGIC_NUMBER {
-// 		return h, nil
-// 	} else {
-// 		return nil, errors.New(fmt.Sprintf("not a valid hashtable at %s", filepath))
-// 	}
-// }
+func OpenHashTableSomeStructFileBacked(filepath string) (*HashTableSomeStruct, error) {
+	h := allocHashTableSomeStructFileBacked(0, filepath)
+	// check metadata
+	if h.MagicNumber != MAGIC_NUMBERSomeStruct {
+		h.DestroyHashTable()
+		return nil, errors.New(fmt.Sprintf("mmaped file header is wrong. Magic number missing. file=%s", filepath))
 
-func NewHashTableSomeStructFileBacked(initialSize uint64, filepath string) *HashTableSomeStruct {
+	}
+	sum := crc32.ChecksumIEEE(h.offheapCells)
+	if h.Checksum != sum {
+		// checksum error
+		h.DestroyHashTable()
+		return nil, errors.New(fmt.Sprintf("mmaped file checksum is invalid. want=%d have=%d file=%s", h.Checksum, sum, filepath))
+	}
+	return h, nil
+}
+
+func NewHashTableSomeStructFileBacked(initialSize uint64, filepath string) (*HashTableSomeStruct, error) {
+	// fresh
 	initialSize = util.UpperPowerOfTwo(initialSize)
+	h := allocHashTableSomeStructFileBacked(initialSize, filepath)
+	h.MagicNumber = MAGIC_NUMBERSomeStruct
+	h.ArraySize = initialSize
+	h.Population = 0
+	return h, nil
+}
+
+func allocHashTableSomeStructFileBacked(initialSize uint64, filepath string) *HashTableSomeStruct {
 	metaSize := unsafe.Sizeof(HashTableMetadataSomeStruct{})
 	cellSize := unsafe.Sizeof(CellSomeStruct{})
 	customSize := unsafe.Sizeof(HashTableCustomMetadataSomeStruct{})
-
 	var toAlloc int64 = -1
-	if filepath == "" {
+	if initialSize > 0 {
 		toAlloc = int64(metaSize + customSize + uintptr(initialSize+1)*cellSize)
 	}
+
 	mmm := *util.Malloc(toAlloc, filepath)
 
 	baseP := unsafe.Pointer(&mmm.Mem[0])
@@ -80,16 +101,7 @@ func NewHashTableSomeStructFileBacked(initialSize uint64, filepath string) *Hash
 
 	// check metadata
 	h.HashTableMetadataSomeStruct = (*HashTableMetadataSomeStruct)(baseP)
-	if h.MagicNumber == MAGIC_NUMBERSomeStruct {
-		// mapped from file
-	} else {
-		// fresh
-		h.MagicNumber = MAGIC_NUMBERSomeStruct
-		h.ArraySize = initialSize
-		h.Population = 0
-	}
 	h.HashTableCustomMetadataSomeStruct = (*HashTableCustomMetadataSomeStruct)((unsafe.Pointer)(base + metaSize))
-
 	return h
 }
 
@@ -111,6 +123,8 @@ func (t *HashTableSomeStruct) Bytes() []byte {
 
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
 func (t *HashTableSomeStruct) Save() {
+
+	t.Checksum = crc32.ChecksumIEEE(t.offheapCells)
 	t.mmm.BlockUntilSync()
 }
 
@@ -276,7 +290,7 @@ func (t *HashTableSomeStruct) DeleteCellSomeStruct(cell *CellSomeStruct) {
 	}
 }
 
-// Clear does not resize the table, but zeroes-out all entries.
+// Clear does not resize the table, but zeroes-out all entries and the custom metadata
 func (t *HashTableSomeStruct) Clear() {
 	// (Does not resize the array)
 	// Clear regular cells
