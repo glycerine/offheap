@@ -44,6 +44,9 @@ const MAGIC_NUMBER_LT_ = 0x123456789ABCDEF
 
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTable_LT_(initialSize uint64) *HashTable_LT_ {
+	if initialSize == 0 {
+		initialSize = 1
+	}
 	h, _ := NewHashTable_LT_FileBacked(initialSize, "")
 	return h
 }
@@ -59,8 +62,9 @@ func OpenHashTable_LT_FileBacked(filepath string) (*HashTable_LT_, error) {
 	sum := crc32.ChecksumIEEE(h.offheapCells)
 	if h.Checksum != sum {
 		// checksum error
+		wanted := h.Checksum
 		h.DestroyHashTable()
-		return nil, errors.New(fmt.Sprintf("mmaped file checksum is invalid. want=%d have=%d file=%s", h.Checksum, sum, filepath))
+		return nil, errors.New(fmt.Sprintf("mmaped file checksum is invalid. want=%d have=%d file=%s", wanted, sum, filepath))
 	}
 	return h, nil
 }
@@ -122,10 +126,14 @@ func (t *HashTable_LT_) Bytes() []byte {
 	return t.offheap
 }
 
+func (t *HashTable_LT_) UpdateChecksum() {
+	t.Checksum = crc32.ChecksumIEEE(t.offheapCells)
+
+}
+
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
 func (t *HashTable_LT_) Save() {
-
-	t.Checksum = crc32.ChecksumIEEE(t.offheapCells)
+	t.UpdateChecksum()
 	t.mmm.BlockUntilSync()
 }
 
