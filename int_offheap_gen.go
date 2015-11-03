@@ -41,13 +41,23 @@ type HashTableInt struct {
 
 const MAGIC_NUMBERInt = 0x123456789ABCDEF
 
+var minSizeInt int64 = int64(unsafe.Sizeof(HashTableMetadataInt{}) + unsafe.Sizeof(CellInt{}) + unsafe.Sizeof(HashTableCustomMetadataInt{}))
+
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTableInt(initialSize uint64) *HashTableInt {
+	if initialSize == 0 {
+		initialSize = 1
+	}
 	h, _ := NewHashTableIntFileBacked(initialSize, "")
 	return h
 }
 
 func OpenHashTableIntFileBacked(filepath string) (*HashTableInt, error) {
+	// TODO - rework alllocHashTable and get rid of the mmap library as we do things twice
+	exists, size := util.FileInfo(filepath)
+	if exists && size < minSizeInt {
+		return nil, errors.New(fmt.Sprintf("mmaped file size is too small, file is damaged. file=%s", filepath))
+	}
 	h := allocHashTableIntFileBacked(0, filepath)
 	// check metadata
 	if h.MagicNumber != MAGIC_NUMBERInt {
@@ -58,8 +68,9 @@ func OpenHashTableIntFileBacked(filepath string) (*HashTableInt, error) {
 	sum := crc32.ChecksumIEEE(h.offheapCells)
 	if h.Checksum != sum {
 		// checksum error
+		wanted := h.Checksum
 		h.DestroyHashTable()
-		return nil, errors.New(fmt.Sprintf("mmaped file checksum is invalid. want=%d have=%d file=%s", h.Checksum, sum, filepath))
+		return nil, errors.New(fmt.Sprintf("mmaped file checksum is invalid. want=%d have=%d file=%s", wanted, sum, filepath))
 	}
 	return h, nil
 }
@@ -121,10 +132,14 @@ func (t *HashTableInt) Bytes() []byte {
 	return t.offheap
 }
 
+func (t *HashTableInt) UpdateChecksum() {
+	t.Checksum = crc32.ChecksumIEEE(t.offheapCells)
+
+}
+
 // Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
 func (t *HashTableInt) Save() {
-
-	t.Checksum = crc32.ChecksumIEEE(t.offheapCells)
+	t.UpdateChecksum()
 	t.mmm.BlockUntilSync()
 }
 

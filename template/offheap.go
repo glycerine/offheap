@@ -42,6 +42,8 @@ type HashTable_LT_ struct {
 
 const MAGIC_NUMBER_LT_ = 0x123456789ABCDEF
 
+var minSize_LT_ int64 = int64(unsafe.Sizeof(HashTableMetadata_LT_{}) + unsafe.Sizeof(Cell_LT_{}) + unsafe.Sizeof(HashTableCustomMetadata_LT_{}))
+
 // Create a new hash table, able to hold initialSize count of keys.
 func NewHashTable_LT_(initialSize uint64) *HashTable_LT_ {
 	if initialSize == 0 {
@@ -52,6 +54,11 @@ func NewHashTable_LT_(initialSize uint64) *HashTable_LT_ {
 }
 
 func OpenHashTable_LT_FileBacked(filepath string) (*HashTable_LT_, error) {
+	// TODO - rework alllocHashTable and get rid of the mmap library as we do things twice
+	exists, size := util.FileInfo(filepath)
+	if exists && size < minSize_LT_ {
+		return nil, errors.New(fmt.Sprintf("mmaped file size is too small, file is damaged. file=%s", filepath))
+	}
 	h := allocHashTable_LT_FileBacked(0, filepath)
 	// check metadata
 	if h.MagicNumber != MAGIC_NUMBER_LT_ {
