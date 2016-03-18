@@ -1,4 +1,4 @@
-//go:generate genny -pkg=offheap -in=template/offheap.go -out=somestruct_offheap_gen.go gen "_T_=SomeStruct _LT_=SomeStruct _C_=EmptyStructSomeStruct"
+//go:generate genny -pkg=offheap -in=template/offheap.go -out=somestruct_offheap_gen_test.go gen "_T_=SomeStruct _LT_=SomeStruct _C_=EmptyStructSomeStruct"
 //go:generate genny -pkg=offheap -in=template/offheap.go -out=int_offheap_gen.go gen "_T_=int _LT_=Int _C_=CustomMetadataIntTest"
 package offheap
 

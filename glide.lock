@@ -1,0 +1,10 @@
+hash: bbf876ddf392ce181c6f1dbacdd145d85ba2c1787dd60b81094f5bcd0287a48c
+updated: 2016-03-18T21:01:56.743153691+01:00
+imports:
+- name: github.com/cheekybits/genny
+  version: 670ed678f7799e3ead194eaf9a0848920a494889
+  subpackages:
+  - generic
+- name: github.com/glycerine/gommap
+  version: e87a6e482c2ceaa54bd76e0fb30d1f2d40dd3f01
+devImports: []
