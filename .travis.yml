@@ -9,3 +9,6 @@ install:
 - make dep
 script:
 - make test
+branches:
+  only:
+    - "master"

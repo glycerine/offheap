@@ -19,7 +19,7 @@ all: build
 build: fmt
 	cd $(GOSRCDIR) && \
 		CGO_ENABLED=0 \
-		go build $(MAINGO)
+		go build -v -i $(MAINGO)
 
 run: build
 	./$(MAIN)
@@ -33,9 +33,9 @@ lint:
 	cd $(GOSRCDIR) && \
 		gometalinter --vendor --errors --fast --deadline=60s -D gotype -D vet $(GOPATHS)
 
-test: build lint
+test: lint
 	cd $(GOSRCDIR) && \
-		go test -timeout 60s $(GOPATHS)
+		go test -timeout 60s -v $(GOPATHS)
 
 bench:
 	cd $(GOSRCDIR) && \
