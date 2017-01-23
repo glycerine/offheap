@@ -37,20 +37,25 @@ type HashTable struct {
 }
 
 // Create a new hash table, able to hold initialSize count of keys.
-func NewHashTable(initialSize uint64) *HashTable {
+func NewHashTable(initialSize int64) *HashTable {
 	return NewHashFileBacked(initialSize, "")
 }
 
-func NewHashFileBacked(initialSize uint64, filepath string) *HashTable {
-
+func NewHashFileBacked(initialSize int64, filepath string) *HashTable {
+	//fmt.Printf("\n\n  NewHashFileBacked called!\n\n")
 	t := HashTable{
 		MagicNumber: 3030675468910466832,
 		CellSz:      uint64(unsafe.Sizeof(Cell{})),
 	}
 
 	// off-heap and off-gc version
-	t.ArraySize = initialSize
-	t.Mmm = *Malloc(int64(t.ArraySize*t.CellSz)+MetadataHeaderMaxBytes, filepath)
+	if initialSize < 0 {
+		t.Mmm = *Malloc(-1, filepath)
+	} else {
+		t.ArraySize = uint64(initialSize)
+		t.Mmm = *Malloc(t.bytesFromArraySizeAndHeader(t.ArraySize), filepath)
+	}
+	//p("&t.Mmm.Mem[0] = %p\n", &t.Mmm.Mem[0])
 	t.OffheapHeader = t.Mmm.Mem
 	t.OffheapCells = t.Mmm.Mem[MetadataHeaderMaxBytes:]
 	t.Cells = (uintptr)(unsafe.Pointer(&t.OffheapCells[0]))
@@ -59,6 +64,7 @@ func NewHashFileBacked(initialSize uint64, filepath string) *HashTable {
 	t2 := HashTable{}
 	_, err := t2.UnmarshalMsg(t.OffheapHeader)
 	if err != nil {
+		//fmt.Printf("UnmarshalMsg err = %v\n", err)
 		// common to not be able to deserialize 0 bytes, don't worry
 	} else {
 		//fmt.Printf("\n deserialized okay! t2=%#v\n t=%#v\n", t2, t)
@@ -169,8 +175,9 @@ func (v *Val_t) GetString() string {
 	return string([]byte((*v)[:]))
 }
 
-// Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync()
-func (t *HashTable) Save() error {
+// Save syncs the memory mapped file to disk using MmapMalloc::BlockUntilSync().
+// If background is true, the save using BackgroundSync() instead of blocking.
+func (t *HashTable) Save(background bool) error {
 	bts, err := t.MarshalMsg(nil)
 	if err != nil {
 		return fmt.Errorf("offheap.HashTable.Save() error: serialization error from msgp.MarshalMsg(): '%s'", err)
@@ -179,9 +186,17 @@ func (t *HashTable) Save() error {
 	if len(bts) > MetadataHeaderMaxBytes {
 		return fmt.Errorf("offheap.HashTable.Save() error: serialization too long: len(bts)==%d is > MetadataHeaderMaxBytes==%d, so serializing the HashTable metadata would overwrite the cell contents; rather than corrupting the cell data we are returning an error here.", len(bts), MetadataHeaderMaxBytes)
 	}
-	copy(t.OffheapHeader, bts)
+	nw := copy(t.OffheapHeader, bts)
+	_ = nw
+	//fmt.Printf("saved bts header of size %v by writing %v = '%s'. t.OffheapHeader = %p, t.OffheapCells = %p, &t.Mmm.Mem[0] = %p\n", len(bts), nw, string(bts), &t.OffheapHeader[0], &t.OffheapCells[0], &t.Mmm.Mem[0])
 
-	t.Mmm.BlockUntilSync()
+	if background {
+		t.Mmm.BackgroundSync()
+		//fmt.Printf("\ndone with call to initiate background sync.\n")
+	} else {
+		t.Mmm.BlockUntilSync()
+		//fmt.Printf("\ndone with block until sync\n")
+	}
 	return nil
 }
 
@@ -217,7 +232,7 @@ func (t *HashTable) Lookup(key uint64) *Cell {
 		return nil
 
 	} else {
-
+		//p("for t = %p, t.ArraySize = %v", t, t.ArraySize)
 		h := integerHash(uint64(key)) % t.ArraySize
 
 		for {
@@ -419,6 +434,7 @@ func (t *HashTable) DeleteKey(key uint64) {
 // Repopulate expands the hashtable to the desiredSize count of cells.
 func (t *HashTable) Repopulate(desiredSize uint64) {
 
+	//p("top of Repopulate(%v)", desiredSize)
 	vprintf("\n ---- Repopulate called with t = \n")
 	vdump(t)
 
@@ -430,8 +446,8 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 	}
 
 	// Allocate new table
-	s := NewHashTable(desiredSize)
-
+	// TODO: implement growmap for mmap backed resizing.
+	s := NewHashTable(int64(desiredSize))
 	s.ZeroUsed = t.ZeroUsed
 	if t.ZeroUsed {
 		s.ZeroCell = t.ZeroCell
@@ -460,6 +476,7 @@ func (t *HashTable) Repopulate(desiredSize uint64) {
 	t.DestroyHashTable()
 
 	*t = *s
+	//p("bottom of Repopulate(), now t.ArraySize = %v, t = %p", t.ArraySize, t)
 }
 
 /*
@@ -539,4 +556,26 @@ func (t *HashTable) Dump() {
 		cell := t.CellAt(i)
 		fmt.Printf("dump cell %d: \n cell.UnHashedKey: '%v'\n cell.ByteKey: '%s'\n cell.Value: '%#v'\n ===============", i, cell.UnHashedKey, string(cell.ByteKey[:]), cell.Value)
 	}
+}
+
+// InsertBK is the insert function for []byte keys.
+// By default only len(Key_t) bytes are used in the key.
+func (t *HashTable) InsertBK(bytekey []byte, value interface{}) bool {
+	return ((*ByteKeyHashTable)(t)).InsertBK(bytekey, value)
+}
+
+func (t *HashTable) LookupBK(bytekey []byte) (Val_t, bool) {
+	return ((*ByteKeyHashTable)(t)).LookupBK(bytekey)
+}
+
+func (t *HashTable) LookupBKInt(bytekey []byte) (int, bool) {
+	v, found := ((*ByteKeyHashTable)(t)).LookupBK(bytekey)
+	if !found {
+		return -1, found
+	}
+	return v.GetInt(), true
+}
+
+func (t *HashTable) bytesFromArraySizeAndHeader(arraySize uint64) int64 {
+	return int64(arraySize*t.CellSz) + MetadataHeaderMaxBytes
 }

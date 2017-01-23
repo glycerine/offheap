@@ -4,21 +4,19 @@ package offheap
 // MSGP CODE GENERATION TOOL (github.com/tinylib/msgp)
 // DO NOT EDIT
 
-import (
-	"github.com/tinylib/msgp/msgp"
-)
+import "github.com/tinylib/msgp/msgp"
 
 // DecodeMsg implements msgp.Decodable
 func (z *Cell) DecodeMsg(dc *msgp.Reader) (err error) {
 	var field []byte
 	_ = field
-	var isz uint32
-	isz, err = dc.ReadMapHeader()
+	var zbai uint32
+	zbai, err = dc.ReadMapHeader()
 	if err != nil {
 		return
 	}
-	for isz > 0 {
-		isz--
+	for zbai > 0 {
+		zbai--
 		field, err = dc.ReadMapKeyPtr()
 		if err != nil {
 			return
@@ -102,13 +100,13 @@ func (z *Cell) MarshalMsg(b []byte) (o []byte, err error) {
 func (z *Cell) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
-	var isz uint32
-	isz, bts, err = msgp.ReadMapHeaderBytes(bts)
+	var zcmr uint32
+	zcmr, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if err != nil {
 		return
 	}
-	for isz > 0 {
-		isz--
+	for zcmr > 0 {
+		zcmr--
 		field, bts, err = msgp.ReadMapKeyZC(bts)
 		if err != nil {
 			return
@@ -140,6 +138,7 @@ func (z *Cell) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	return
 }
 
+// Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *Cell) Msgsize() (s int) {
 	s = 1 + 12 + msgp.Uint64Size + 8 + msgp.ArrayHeaderSize + (64 * (msgp.ByteSize)) + 6 + msgp.ArrayHeaderSize + (56 * (msgp.ByteSize))
 	return
@@ -149,13 +148,13 @@ func (z *Cell) Msgsize() (s int) {
 func (z *HashTable) DecodeMsg(dc *msgp.Reader) (err error) {
 	var field []byte
 	_ = field
-	var isz uint32
-	isz, err = dc.ReadMapHeader()
+	var zajw uint32
+	zajw, err = dc.ReadMapHeader()
 	if err != nil {
 		return
 	}
-	for isz > 0 {
-		isz--
+	for zajw > 0 {
+		zajw--
 		field, err = dc.ReadMapKeyPtr()
 		if err != nil {
 			return
@@ -293,13 +292,13 @@ func (z *HashTable) MarshalMsg(b []byte) (o []byte, err error) {
 func (z *HashTable) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
-	var isz uint32
-	isz, bts, err = msgp.ReadMapHeaderBytes(bts)
+	var zwht uint32
+	zwht, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if err != nil {
 		return
 	}
-	for isz > 0 {
-		isz--
+	for zwht > 0 {
+		zwht--
 		field, bts, err = msgp.ReadMapKeyZC(bts)
 		if err != nil {
 			return
@@ -346,6 +345,7 @@ func (z *HashTable) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	return
 }
 
+// Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *HashTable) Msgsize() (s int) {
 	s = 1 + 12 + msgp.IntSize + 7 + msgp.Uint64Size + 10 + msgp.Uint64Size + 11 + msgp.Uint64Size + 9 + msgp.BoolSize + 9 + z.ZeroCell.Msgsize()
 	return
@@ -355,13 +355,13 @@ func (z *HashTable) Msgsize() (s int) {
 func (z *Iterator) DecodeMsg(dc *msgp.Reader) (err error) {
 	var field []byte
 	_ = field
-	var isz uint32
-	isz, err = dc.ReadMapHeader()
+	var zxhx uint32
+	zxhx, err = dc.ReadMapHeader()
 	if err != nil {
 		return
 	}
-	for isz > 0 {
-		isz--
+	for zxhx > 0 {
+		zxhx--
 		field, err = dc.ReadMapKeyPtr()
 		if err != nil {
 			return
@@ -399,13 +399,13 @@ func (z *Iterator) DecodeMsg(dc *msgp.Reader) (err error) {
 				if z.Cur == nil {
 					z.Cur = new(Cell)
 				}
-				var isz uint32
-				isz, err = dc.ReadMapHeader()
+				var zlqf uint32
+				zlqf, err = dc.ReadMapHeader()
 				if err != nil {
 					return
 				}
-				for isz > 0 {
-					isz--
+				for zlqf > 0 {
+					zlqf--
 					field, err = dc.ReadMapKeyPtr()
 					if err != nil {
 						return
@@ -555,13 +555,13 @@ func (z *Iterator) MarshalMsg(b []byte) (o []byte, err error) {
 func (z *Iterator) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
-	var isz uint32
-	isz, bts, err = msgp.ReadMapHeaderBytes(bts)
+	var zdaf uint32
+	zdaf, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if err != nil {
 		return
 	}
-	for isz > 0 {
-		isz--
+	for zdaf > 0 {
+		zdaf--
 		field, bts, err = msgp.ReadMapKeyZC(bts)
 		if err != nil {
 			return
@@ -599,13 +599,13 @@ func (z *Iterator) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				if z.Cur == nil {
 					z.Cur = new(Cell)
 				}
-				var isz uint32
-				isz, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zpks uint32
+				zpks, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					return
 				}
-				for isz > 0 {
-					isz--
+				for zpks > 0 {
+					zpks--
 					field, bts, err = msgp.ReadMapKeyZC(bts)
 					if err != nil {
 						return
@@ -645,6 +645,7 @@ func (z *Iterator) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	return
 }
 
+// Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *Iterator) Msgsize() (s int) {
 	s = 1 + 4
 	if z.Tab == nil {
@@ -696,6 +697,7 @@ func (z *Key_t) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	return
 }
 
+// Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *Key_t) Msgsize() (s int) {
 	s = msgp.ArrayHeaderSize + (64 * (msgp.ByteSize))
 	return
@@ -736,6 +738,7 @@ func (z *Val_t) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	return
 }
 
+// Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *Val_t) Msgsize() (s int) {
 	s = msgp.ArrayHeaderSize + (56 * (msgp.ByteSize))
 	return

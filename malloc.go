@@ -170,6 +170,49 @@ func (mm *MmapMalloc) BlockUntilSync() {
 // is no guarantee that file has ever been written to disk at any point before
 // the munmap() call that happens during Free(). See the man pages msync(2)
 // and mmap(2) for details.
-func (mm *MmapMalloc) BackgrounSync() {
+func (mm *MmapMalloc) BackgroundSync() {
 	mm.MMap.Sync(gommap.MS_ASYNC)
+}
+
+// Growmap grows a memory mapping
+func Growmap(oldmap *MmapMalloc, newSize int64) (newmap *MmapMalloc, err error) {
+
+	if oldmap.Path == "" || oldmap.Fd <= 0 {
+		return nil, fmt.Errorf("oldmap must be mapping to " +
+			"actual file, so we can grow it")
+	}
+	if newSize <= oldmap.BytesAlloc || newSize <= oldmap.FileBytesLen {
+		return nil, fmt.Errorf("mapping in Growmap must be larger than before")
+	}
+
+	newmap = &MmapMalloc{}
+	newmap.Path = oldmap.Path
+	newmap.Fd = oldmap.Fd
+
+	// set to the size requested
+	err = syscall.Ftruncate(newmap.Fd, newSize)
+	if err != nil {
+		panic(err)
+		return nil, fmt.Errorf("syscall.Ftruncate to grow %v -> %v"+
+			" returned error: '%v'", oldmap.BytesAlloc, newSize, err)
+	}
+	newmap.FileBytesLen = newSize
+	newmap.BytesAlloc = newSize
+
+	prot := syscall.PROT_READ | syscall.PROT_WRITE
+	flags := syscall.MAP_SHARED
+
+	p("\n ------->> path = '%v',  newmap.Fd = %v, with flags = %x, sz = %v,  prot = '%v'\n", newmap.Path, newmap.Fd, flags, newSize, prot)
+
+	mmap, err := syscall.Mmap(newmap.Fd, 0, int(newSize), prot, flags)
+	if err != nil {
+		panic(err)
+		return nil, fmt.Errorf("syscall.Mmap returned error: '%v'", err)
+	}
+
+	// duplicate member to avoid casts all over the place.
+	newmap.MMap = mmap
+	newmap.Mem = mmap
+
+	return newmap, nil
 }

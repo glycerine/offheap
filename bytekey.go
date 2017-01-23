@@ -23,7 +23,7 @@ var xxHasher64 = xxh64.New64()
 
 // NewByteKeyHashTable produces a new ByteKeyHashTable, one specialized for
 // handling []byte as keys.
-func NewByteKeyHashTable(initialSize uint64) *ByteKeyHashTable {
+func NewByteKeyHashTable(initialSize int64) *ByteKeyHashTable {
 	return (*ByteKeyHashTable)(NewHashTable(initialSize))
 }
 
@@ -91,7 +91,7 @@ type StringHashTable HashTable
 
 // NewStringHashTable produces a new StringHashTable, one specialized for
 // handling keys of type string.
-func NewStringHashTable(initialSize uint64) *StringHashTable {
+func NewStringHashTable(initialSize int64) *StringHashTable {
 	return (*StringHashTable)(NewHashTable(initialSize))
 }
 
