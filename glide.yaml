@@ -3,4 +3,4 @@ import:
 - package: github.com/cheekybits/genny
   subpackages:
   - generic
-- package: github.com/glycerine/gommap
+- package: github.com/remerge/gommap

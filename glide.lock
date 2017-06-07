@@ -1,10 +1,27 @@
-hash: bbf876ddf392ce181c6f1dbacdd145d85ba2c1787dd60b81094f5bcd0287a48c
-updated: 2016-03-18T21:01:56.743153691+01:00
+hash: 469b5546153eae06fc1d4bb9228acccc58b7dbc6f54fbae5e743c55df6927485
+updated: 2017-06-07T12:01:03.359802345Z
 imports:
 - name: github.com/cheekybits/genny
-  version: 670ed678f7799e3ead194eaf9a0848920a494889
+  version: 9127e812e1e9e501ce899a18121d316ecb52e4ba
   subpackages:
   - generic
-- name: github.com/glycerine/gommap
-  version: e87a6e482c2ceaa54bd76e0fb30d1f2d40dd3f01
-devImports: []
+- name: github.com/remerge/gommap
+  version: adbb5223c279bd33555ee745936362c9d605a6ff
+testImports:
+- name: github.com/gopherjs/gopherjs
+  version: 7cde3d36aea3e1b3be7827c4dcbe6bbae73d012e
+  subpackages:
+  - js
+- name: github.com/jtolds/gls
+  version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
+- name: github.com/smartystreets/assertions
+  version: 8d53f0381cdc56c7e0f06f4995d21cd04c5a53a8
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
+- name: github.com/smartystreets/goconvey
+  version: 9e8dc3f972df6c8fcc0375ef492c24d0bb204857
+  subpackages:
+  - convey
+  - convey/gotest
+  - convey/reporting

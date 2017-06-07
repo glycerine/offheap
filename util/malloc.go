@@ -5,7 +5,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/glycerine/gommap"
+	"github.com/remerge/gommap"
 )
 
 // The MmapMalloc struct represents either an anonymous, private
