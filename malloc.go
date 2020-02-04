@@ -44,7 +44,7 @@ func (mm *MmapMalloc) TruncateTo(newSize int64) {
 	}
 }
 
-// Free eleases the memory allocation back to the OS by removing
+// Free releases the memory allocation back to the OS by removing
 // the (possibly anonymous and private) memroy mapped file that
 // was backing it. Warning: any pointers still remaining will crash
 // the program if dereferenced.
