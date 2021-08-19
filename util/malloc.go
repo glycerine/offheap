@@ -28,6 +28,8 @@ type MmapMalloc struct {
 	BytesAlloc   int64       `capid:"3"`
 	MMap         gommap.MMap // equiv to Mem, just avoids casts everywhere.
 	Mem          []byte      `capid:"4"` // equiv to Mmap
+
+	ReadOnly bool
 }
 
 // TruncateTo enlarges or shortens the file backing the
@@ -35,6 +37,9 @@ type MmapMalloc struct {
 // the file underlying the mapping, not
 // the mapping itself at this point.
 func (mm *MmapMalloc) TruncateTo(newSize int64) {
+	if mm.ReadOnly {
+		panic("cannot truncate read-only")
+	}
 	if mm.File == nil {
 		panic("cannot call TruncateTo() on a non-file backed MmapMalloc.")
 	}
@@ -73,7 +78,6 @@ func (mm *MmapMalloc) Free() {
 // The returned value's .Mem member holds a []byte pointing to the returned memory (as does .MMap, for use in other gommap calls).
 //
 func Malloc(numBytes int64, path string) *MmapMalloc {
-
 	mm := MmapMalloc{
 		Path: path,
 	}
@@ -82,13 +86,10 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 	if path == "" {
 		flags = syscall.MAP_ANON | syscall.MAP_PRIVATE
 		mm.Fd = -1
-
 		if numBytes < 0 {
 			panic("numBytes was negative but path was also empty: don't know how much to allocate!")
 		}
-
 	} else {
-
 		if dirExists(mm.Path) {
 			panic(fmt.Sprintf("path '%s' already exists as a directory, so cannot be used as a memory mapped file.", mm.Path))
 		}
@@ -156,6 +157,41 @@ func Malloc(numBytes int64, path string) *MmapMalloc {
 	mm.Mem = mmap
 
 	return &mm
+}
+
+// MallocReadOnly creates new read-only memory region from existing file
+func MallocReadOnly(path string) (mm *MmapMalloc, err error) {
+	mm = &MmapMalloc{
+		Path:     path,
+		ReadOnly: true,
+	}
+
+	if dirExists(mm.Path) {
+		panic(fmt.Sprintf("path '%s' already exists as a directory, so cannot be used as a memory mapped file.", mm.Path))
+	}
+
+	mm.File, err = os.Open(mm.Path)
+	if err != nil {
+		return nil, fmt.Errorf("could not open read-only file %s: %w", mm.Path, err)
+	}
+	mm.Fd = int(mm.File.Fd())
+
+	var stat syscall.Stat_t
+	if err = syscall.Fstat(mm.Fd, &stat); err != nil {
+		return nil, err
+	}
+
+	mm.FileBytesLen = stat.Size
+	mm.BytesAlloc = stat.Size
+
+	mm.MMap, err = syscall.Mmap(mm.Fd, 0, int(stat.Size), syscall.PROT_READ, syscall.MAP_SHARED)
+	if err != nil {
+		return nil, err
+	}
+
+	mm.Mem = mm.MMap
+
+	return mm, nil
 }
 
 // BlockUntilSync() returns only once the file is synced to disk.
