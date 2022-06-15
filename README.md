@@ -20,7 +20,7 @@ Update: the cgo-malloc branch of this github repo has an implementation that use
 call the malloc/calloc/free functions in the C stdlib. Using CGO 
 gives up the save-to-disk instantly feature and creates a portability issue where
 you have linked against a specific version of the C stdlib. However if you
-are making/destroying alot of tables, the CGO apporach may be faster.
+are making/destroying alot of tables, the CGO approach may be faster.
 
  See offheap.go for all the interesting code. Modify val_t to hold
  you values, and key_t to contain your keys. Current sample code
@@ -31,7 +31,7 @@ are making/destroying alot of tables, the CGO apporach may be faster.
  point back into the go-heap, such values maybe garbage collected by
  the Go runtime without notice.
 
- On Save(), serialization of the HashTable itself is done using msgpack to write bytes to the first page (4k bytes) of the memory mapped file. This uses github.com/tinylib/msgp which is a blazing fast msgpack serialization library. It is fast because it avoids reflection and pre-computes the serializations (using go generate based inspection of your go source). If you need to serialize your values into the Val_t, I would suggest evaluating the msgp for serialization and deserialization. The author, Philip Hofer, has done a terrific job and put alot of effort into tuning it for performance. If you are still pressed for speed, consider also ommitting the field labels using the '//msgp:tuple MyValueType' annotation. As Mr. Hofer says, "For smaller objects, tuple encoding can yield serious performance improvements." [https://github.com/tinylib/msgp/wiki/Preprocessor-Directives].
+ On Save(), serialization of the HashTable itself is done using msgpack to write bytes to the first page (4k bytes) of the memory mapped file. This uses github.com/tinylib/msgp which is a blazing fast msgpack serialization library. It is fast because it avoids reflection and pre-computes the serializations (using go generate based inspection of your go source). If you need to serialize your values into the Val_t, I would suggest evaluating the msgp for serialization and deserialization. The author, Philip Hofer, has done a terrific job and put alot of effort into tuning it for performance. If you are still pressed for speed, consider also omitting the field labels using the '//msgp:tuple MyValueType' annotation. As Mr. Hofer says, "For smaller objects, tuple encoding can yield serious performance improvements." [https://github.com/tinylib/msgp/wiki/Preprocessor-Directives].
 
  Initial HashTable implementation inspired by the public domain C++ code of
 
