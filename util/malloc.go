@@ -184,7 +184,7 @@ func MallocReadOnly(path string) (mm *MmapMalloc, err error) {
 	mm.FileBytesLen = stat.Size
 	mm.BytesAlloc = stat.Size
 
-	mm.MMap, err = syscall.Mmap(mm.Fd, 0, int(stat.Size), syscall.PROT_READ, syscall.MAP_SHARED)
+	mm.MMap, err = syscall.Mmap(mm.Fd, 0, int(stat.Size), syscall.PROT_READ, syscall.MAP_SHARED|syscall.MAP_POPULATE)
 	if err != nil {
 		return nil, err
 	}
