@@ -14,7 +14,7 @@ type ByteKeyHashTable HashTable
 
 // xxHasher64 provides hashing for the byte-key (BK) interface to the hash table
 //
-// We use the 64-bit implimentation of XXHash for speed.
+// We use the 64-bit implementation of XXHash for speed.
 // see
 //   https://github.com/OneOfOne/xxhash (github.com/glycerine/xxhash-64 version-locks)
 //   http://fastcompression.blogspot.com/2014/07/xxhash-wider-64-bits.html
