@@ -23,3 +23,7 @@ _testmain.go
 *.test
 *.prof
 *~
+mmap.dat
+save_test_hash.ohdat.copy
+save_test_hash.ohdat
+

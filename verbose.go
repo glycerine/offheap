@@ -25,3 +25,9 @@ func vdump(i interface{}) {
 func p(format string, stuff ...interface{}) {
 	fmt.Printf("\n "+format+"\n", stuff...)
 }
+
+func panicOn(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

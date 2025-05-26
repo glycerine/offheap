@@ -3,6 +3,7 @@ package offheap_test
 import (
 	"fmt"
 	"os"
+	//"time"
 	"os/exec"
 	"strings"
 	"testing"
@@ -10,6 +11,12 @@ import (
 	cv "github.com/glycerine/goconvey/convey"
 	"github.com/glycerine/offheap"
 )
+
+func panicOn(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
 
 func TestSaveRestore(t *testing.T) {
 
@@ -40,23 +47,30 @@ func TestSaveRestore(t *testing.T) {
 		// 45 -> 28
 
 		cv.So(h.Population, cv.ShouldEqual, 2)
-		h.Save(false)
+		err := h.Save(false)
+		panicOn(err)
 
 		// copy to a new file to be sure everything is there, then mmap the new file
 		fncopy := fn + ".copy"
-		err := os.Remove(fncopy)
+		err = os.Remove(fncopy)
 		if err != nil && !strings.HasSuffix(err.Error(), "no such file or directory") {
 			panic(err)
 		}
+
 		err = exec.Command("/bin/cp", "-p", fn, fncopy).Run()
 		if err != nil {
 			panic(err)
 		}
-		defer os.Remove(fncopy)
+		//defer os.Remove(fncopy)
+		//time.Sleep(time.Second) // let it hit disk?
 
+		fmt.Printf("restoring from fncopy = '%v'\n", fncopy)
 		h2 := offheap.NewHashFileBacked(8, fncopy)
 
 		cell2 := h2.Lookup(23)
+		if cell2 == nil {
+			panic("why is cell2 nil?")
+		}
 		cv.So(cell2.Value[0], cv.ShouldEqual, 55)
 
 		cell2 = h2.Lookup(45)
